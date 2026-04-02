@@ -1,0 +1,49 @@
+#!/bin/zsh
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+staged_files=("${(@f)$(git diff --cached --name-only --diff-filter=ACMR)}")
+
+(( ${#staged_files[@]} == 0 )) && exit 0
+
+fail() {
+  print -u2 -- "pre-commit: $1"
+  exit 1
+}
+
+typeset -a blocked_files
+
+for file in $staged_files; do
+  case "$file" in
+    restic.env|restic.env.*)
+      [[ "$file" != "restic.env.example" ]] && blocked_files+=("$file")
+      ;;
+    restic-repository.txt|restic-repository.txt.*)
+      [[ "$file" != "restic-repository.txt.example" ]] && blocked_files+=("$file")
+      ;;
+    restic-include-macos.txt|restic-exclude-macos.txt)
+      blocked_files+=("$file")
+      ;;
+    launchd/*.plist)
+      [[ "$file" != *.plist.example ]] && blocked_files+=("$file")
+      ;;
+    .DS_Store|*/.DS_Store)
+      blocked_files+=("$file")
+      ;;
+  esac
+done
+
+if (( ${#blocked_files[@]} > 0 )); then
+  print -u2 -- "pre-commit: refusing to commit generated or local-only files:"
+  printf '%s\n' "${blocked_files[@]}" | sed 's/^/  - /' >&2
+  print -u2 -- "pre-commit: commit the tracked template or documentation instead."
+  exit 1
+fi
+
+git diff --cached --check -- || fail "staged diff has whitespace or conflict-marker issues"
+
+./verify_repo.sh shell plists readmes || fail "repo verification checks failed"
+
+exit 0

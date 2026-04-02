@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+"http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.restic-rest-client.backup</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <!-- Prevent sleep during backup, then run the script -->
+        <string>/usr/bin/caffeinate</string>
+        <string>-is</string>
+        <string>{{SCRIPT_DIR}}/run_backup.sh</string>
+        <string>backup</string>
+    </array>
+
+    <!-- Run every 2 hours (7200 seconds). Adjust as needed. -->
+    <key>StartInterval</key>
+    <integer>7200</integer>
+
+    <!-- Run once when the agent is loaded (e.g. at login) -->
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!-- Where to log stdout/stderr from launchd runs -->
+    <key>StandardOutPath</key>
+    <string>{{HOME}}/Library/Logs/restic-rest-client/daemon_backup.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>{{HOME}}/Library/Logs/restic-rest-client/daemon_backup.log</string>
+</dict>
+</plist>

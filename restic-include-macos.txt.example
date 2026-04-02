@@ -1,0 +1,35 @@
+# ===========================
+# Restic Include File (macOS)
+# Example template — bootstrap.sh replaces {{HOME}} with your home directory.
+# ===========================
+# Strategy:
+# - Back up all personal data under {{HOME}}.
+# - Keep key system/dev configs that are hard to recreate.
+# - Let the exclude file trim out caches, trash, and rebuildable artifacts.
+
+# --- Core user data (everything lives here) ---
+{{HOME}}
+
+# --- Global/system config that may be useful to keep ---
+# System-wide config files (network, services, etc. - small but valuable)
+/etc
+
+# Homebrew configs (Apple Silicon)
+/opt/homebrew/etc
+
+# (Intel Mac Homebrew configs – harmless on Apple Silicon; ignore if unused)
+# /usr/local/etc
+
+# --- Shared user data (optional but usually small) ---
+/Users/Shared
+
+# --- Optional: specific “must not lose” dirs (redundant but explicit) ---
+# Uncomment if you want to be extra explicit; they are already under {{HOME}}
+# {{HOME}}/Documents
+# {{HOME}}/Desktop
+# {{HOME}}/Pictures
+# {{HOME}}/Music
+# {{HOME}}/Movies
+# {{HOME}}/Git
+# {{HOME}}/.ssh
+# {{HOME}}/.config

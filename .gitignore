@@ -1,0 +1,23 @@
+# Restic secrets (keep example tracked, ignore populated copies)
+restic.env
+restic.env.*
+!restic.env.example
+restic-repository.txt
+restic-repository.txt.*
+!restic-repository.txt.example
+
+# Host-specific include/exclude config (templates stay tracked)
+restic-include-macos.txt
+restic-exclude-macos.txt
+!restic-include-macos.txt.example
+!restic-exclude-macos.txt.example
+
+# Host-specific launchd plists (templates stay tracked)
+launchd/*.plist
+!launchd/*.plist.example
+
+# Editor/OS cruft
+.DS_Store
+*.swp
+*.tmp
+*.log

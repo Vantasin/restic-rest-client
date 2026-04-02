@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+"http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.restic-rest-client.logcleanup</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <!-- Clean old restic logs -->
+        <string>{{SCRIPT_DIR}}/run_backup.sh</string>
+        <string>logcleanup</string>
+    </array>
+
+    <!-- Run roughly every 24 hours while loaded. -->
+    <key>StartInterval</key>
+    <integer>86400</integer>
+
+    <!-- Where to log stdout/stderr from launchd runs -->
+    <key>StandardOutPath</key>
+    <string>{{HOME}}/Library/Logs/restic-rest-client/daemon_logcleanup.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>{{HOME}}/Library/Logs/restic-rest-client/daemon_logcleanup.log</string>
+</dict>
+</plist>

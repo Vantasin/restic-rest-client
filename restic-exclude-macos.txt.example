@@ -1,0 +1,180 @@
+# ===========================
+# Restic Exclude File (macOS)
+# Example template — bootstrap.sh replaces {{HOME}} with your home directory.
+# ===========================
+# Strategy:
+# - Trim obvious junk: caches, logs, trash, temp.
+# - Avoid backing up backups (Time Machine, iOS backups, etc. – optional).
+# - Optionally trim heavy rebuildable dev artifacts (venvs, build dirs).
+# - Optional: skip full Library to keep first test backup small; remove when ready.
+# {{HOME}}/Library
+
+# Skip macOS "Previously Relocated Items" bundle (permission issues, not needed)
+/Users/Shared/Previously\ Relocated\ Items
+
+# ---------------------------
+# 1. User caches & logs
+# ---------------------------
+
+# User-level caches
+{{HOME}}/Library/Caches
+{{HOME}}/Library/Logs
+
+# Generic *nix-style cache dirs
+{{HOME}}/.cache
+
+# ---------------------------
+# 2. Trash, temp, downloads (optional)
+# ---------------------------
+
+# Trash
+{{HOME}}/.Trash
+
+# Temp folders
+{{HOME}}/tmp
+{{HOME}}/Temp
+
+# If you treat Downloads as scratch space and don’t care to keep it, uncomment:
+# {{HOME}}/Downloads
+
+# ---------------------------
+# 3. Big system-generated stuff (optional)
+# ---------------------------
+
+# Finder/iPhone/iPad device backups and sync state. These can be very large and
+# act like local copies of another backup set; comment this out only if this
+# Mac is the only place those device backups exist and you want restic to keep
+# protecting them too.
+{{HOME}}/Library/Application\ Support/MobileSync
+
+# Old Xcode/iOS simulator data (if you use Xcode these explode in size)
+# {{HOME}}/Library/Developer/CoreSimulator
+# {{HOME}}/Library/Developer/Xcode/DerivedData
+
+# Local copies of other backup tools (don’t back up backups)
+# Uncomment if applicable:
+# {{HOME}}/Backups
+# {{HOME}}/TimeMachine
+# {{HOME}}/Borg
+# {{HOME}}/Restic
+
+# ---------------------------
+# 4. Dev/build artifacts (optional tuning)
+# ---------------------------
+# These are rebuildable and can be large. Comment out anything you *do* want backed up.
+
+# Python virtualenvs commonly named "env", "venv", ".venv" inside your projects
+# Example for your Django env in ~/Git/Project-Acoustic/env:
+# {{HOME}}/Git/Project-Acoustic/env
+
+# If you follow a standard pattern, list them here:
+# {{HOME}}/Git/*/env
+# {{HOME}}/Git/*/venv
+# {{HOME}}/Git/*/.venv
+
+# Node build output & deps (only if you do a lot of JS and don’t care to back these up):
+# {{HOME}}/Git/*/node_modules
+# {{HOME}}/Git/*/dist
+# {{HOME}}/Git/*/build
+
+# Python bytecode
+# {{HOME}}/**/*.pyc
+# {{HOME}}/**/__pycache__
+
+# ---------------------------
+# 5. Large game caches / installs
+# ---------------------------
+{{HOME}}/Library/Application\ Support/Steam
+{{HOME}}/Library/Application\ Support/EVE\ Online/p_drive/Users/Shared/EVE\ Online
+
+# ---------------------------
+# 6. Cloud/metadata (sync elsewhere; large/noisy)
+# ---------------------------
+# iCloud Drive / Mobile Documents can produce "resource deadlock avoided" if
+# files are online-only. Exclude only if you intentionally do not want that
+# iCloud-managed content in restic.
+{{HOME}}/Library/Mobile\ Documents
+{{HOME}}/Library/CloudStorage
+{{HOME}}/Library/Metadata
+
+# ---------------------------
+# 7. System-protected app data (permission errors; skip)
+# ---------------------------
+{{HOME}}/Library/Application\ Support/FileProvider/*/wharf/tombstone
+{{HOME}}/Library/Google
+{{HOME}}/Library/Group\ Containers
+{{HOME}}/Library/Daemon\ Containers
+{{HOME}}/Library/Biome
+{{HOME}}/Library/DuetExpertCenter
+
+# Additional TCC-protected paths seen in backup_2026-03-27_21-00-44.log
+{{HOME}}/Library/Accounts
+{{HOME}}/Library/AppleMediaServices
+{{HOME}}/Library/Application\ Support/AddressBook
+{{HOME}}/Library/Application\ Support/CallHistoryDB
+{{HOME}}/Library/Application\ Support/CallHistoryTransactions
+{{HOME}}/Library/Application\ Support/CloudDocs
+{{HOME}}/Library/Application\ Support/DifferentialPrivacy
+{{HOME}}/Library/Application\ Support/FaceTime
+{{HOME}}/Library/Application\ Support/FileProvider
+{{HOME}}/Library/Application\ Support/Knowledge
+{{HOME}}/Library/Application\ Support/com.apple.LaunchServicesTemplateApp.dv
+{{HOME}}/Library/Application\ Support/com.apple.TCC
+{{HOME}}/Library/Application\ Support/com.apple.avfoundation/Frecents
+{{HOME}}/Library/Application\ Support/com.apple.sharedfilelist
+{{HOME}}/Library/Assistant/SiriVocabulary
+{{HOME}}/Library/Autosave\ Information
+{{HOME}}/Library/ContainerManager
+{{HOME}}/Library/Containers/*/.com.apple.containermanagerd.metadata.plist
+{{HOME}}/Library/Containers/*/Data
+{{HOME}}/Library/Containers/com.apple.Home
+{{HOME}}/Library/Containers/com.apple.Maps/Data/Maps
+{{HOME}}/Library/Containers/com.apple.MobileSMS
+{{HOME}}/Library/Containers/com.apple.Notes
+{{HOME}}/Library/Containers/com.apple.Safari
+{{HOME}}/Library/Containers/com.apple.Safari.WebApp
+{{HOME}}/Library/Containers/com.apple.VoiceMemos
+{{HOME}}/Library/Containers/com.apple.corerecents.recentsd/Data/Library/Recents
+{{HOME}}/Library/Containers/com.apple.mail
+{{HOME}}/Library/Containers/com.apple.news
+{{HOME}}/Library/Containers/com.apple.stocks
+{{HOME}}/Library/Cookies
+{{HOME}}/Library/CoreFollowUp
+{{HOME}}/Library/DoNotDisturb
+{{HOME}}/Library/HomeKit
+{{HOME}}/Library/IdentityServices
+{{HOME}}/Library/IntelligencePlatform
+{{HOME}}/Library/Mail
+{{HOME}}/Library/Messages
+{{HOME}}/Library/PersonalizationPortrait
+{{HOME}}/Library/Preferences/com.apple.AddressBook.plist
+{{HOME}}/Library/Preferences/com.apple.MobileSMS.CKDNDList.plist
+{{HOME}}/Library/Preferences/com.apple.MobileSMS.plist
+{{HOME}}/Library/Preferences/com.apple.homed.notbackedup.plist
+{{HOME}}/Library/Preferences/com.apple.homed.plist
+{{HOME}}/Library/Preferences/com.apple.madrid.plist
+{{HOME}}/Library/Preferences/com.apple.mail-shared.plist
+{{HOME}}/Library/Preferences/com.apple.messages.pinning.plist
+{{HOME}}/Library/Safari
+{{HOME}}/Library/Sharing
+{{HOME}}/Library/Shortcuts
+{{HOME}}/Library/StatusKit
+{{HOME}}/Library/Suggestions
+{{HOME}}/Library/Trial
+{{HOME}}/Library/Weather
+{{HOME}}/Library/com.apple.aiml.instrumentation
+{{HOME}}/Library/com.apple.bluetooth.services.cloud/CachedRecords/SoundProfileAsset
+
+# ---------------------------
+# 8. Applications (usually not included anyway)
+# ---------------------------
+# Your include file does NOT include /Applications,
+# so these are redundant but left here as documentation.
+# /Applications
+
+# ---------------------------
+# 9. System items we never want (for safety)
+# ---------------------------
+/System
+/private/var/vm
+/Volumes

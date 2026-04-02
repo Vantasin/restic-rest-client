@@ -1,0 +1,4 @@
+# logfile_name                         [owner:group] mode count size  when flags
+{{HOME}}/Library/Logs/restic-rest-client/daemon_backup.log      {{USER}}:staff 640 1 5120 * ZN
+{{HOME}}/Library/Logs/restic-rest-client/daemon_prune.log       {{USER}}:staff 640 1 5120 * ZN
+{{HOME}}/Library/Logs/restic-rest-client/daemon_logcleanup.log  {{USER}}:staff 640 1 5120 * ZN

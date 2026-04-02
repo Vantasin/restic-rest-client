@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+"http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.restic-rest-client.prune</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <!-- Prevent sleep during prune, then run the script -->
+        <string>/usr/bin/caffeinate</string>
+        <string>-is</string>
+        <string>{{SCRIPT_DIR}}/run_backup.sh</string>
+        <string>prune</string>
+    </array>
+
+    <!-- Run nightly at 03:00 while loaded. -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>3</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <!-- Where to log stdout/stderr from launchd runs -->
+    <key>StandardOutPath</key>
+    <string>{{HOME}}/Library/Logs/restic-rest-client/daemon_prune.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>{{HOME}}/Library/Logs/restic-rest-client/daemon_prune.log</string>
+</dict>
+</plist>
