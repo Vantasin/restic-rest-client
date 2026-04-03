@@ -2,7 +2,11 @@
 
 ## Status
 
-Superseded by 0006
+Historical entry; later refined by 0005 and 0006
+
+This body is preserved as the original decision text. See `0005` for the later
+base-URL plus `make init-repo` onboarding flow, and `0006` for removal of the
+legacy `RESTIC_REPOSITORY_FILE` compatibility path.
 
 ## Context
 

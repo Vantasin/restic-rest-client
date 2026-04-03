@@ -59,11 +59,13 @@ agent and verifies that it is not still loaded.
 If you change `RESTIC_PRUNE_ENABLED` after the initial install, rerun:
 
 ```bash
-make install-force
+make install
 ```
 
-That rewrites the local launchd and `newsyslog` assets with overwrites and
-adds or removes the prune launch agent to match the new setting.
+That reloads the installed launchd agents and adds or removes the prune launch
+agent to match the new setting without overwriting your local generated config.
+Use `make install-force` only when you intentionally want to regenerate local
+files from templates and overwrite the installed `newsyslog` config.
 
 ## Recommended Order
 
@@ -127,6 +129,10 @@ Install with overwrites:
 ```bash
 ./bootstrap.sh --install --force
 ```
+
+This overwrites existing generated local files and the installed `newsyslog`
+config. It is not required just to reconcile prune mode after changing
+`RESTIC_PRUNE_ENABLED`.
 
 Uninstall:
 

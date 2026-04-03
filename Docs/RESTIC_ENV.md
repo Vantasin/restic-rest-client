@@ -139,11 +139,14 @@ export RESTIC_PRUNE_ENABLED="true"
 After changing it, rerun:
 
 ```bash
-make install-force
+make install
 ```
 
-That regenerates the local launchd and `newsyslog` assets with overwrites and
-installs or removes the prune launch agent to match the new mode.
+That reloads the installed launchd agents and installs or removes the prune
+launch agent to match the new mode without overwriting your local generated
+config. Use `make install-force` only when you intentionally want to
+regenerate local files from templates and overwrite the installed
+`newsyslog` config.
 
 ## Email Notifications
 

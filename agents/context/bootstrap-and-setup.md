@@ -26,8 +26,10 @@ Canonical human docs:
 
 - Bootstrap changes often affect both tracked templates and installed local
   state.
-- The env template, optional legacy repository-file path, and prune install
-  mode are part of bootstrap behavior, not just docs.
+- The env template and prune install mode are part of bootstrap behavior, not
+  just docs.
+- `make install` should reconcile prune-agent state without overwriting local
+  generated config; `--force` is the template-overwrite path.
 - Password setup changes are security-sensitive; avoid exposing secrets in
   logs, docs, or examples.
 - Makefile shortcuts should stay aligned with the underlying scripts.

@@ -40,15 +40,17 @@ make install
 Generate local config files and install launchd + `newsyslog`.
 This prompts for `sudo` to install the `newsyslog` config.
 Backup and log cleanup are always installed. Prune is installed only when
-`RESTIC_PRUNE_ENABLED=true`.
+`RESTIC_PRUNE_ENABLED=true`. Rerun `make install` after changing
+`RESTIC_PRUNE_ENABLED` so the installed launchd assets match the new prune
+mode without overwriting local generated config.
 
 ```bash
 make install-force
 ```
 
 Install with overwrites for existing local files and the `newsyslog` config.
-Use this after changing `RESTIC_PRUNE_ENABLED` so the installed launchd assets
-match the new prune mode.
+Use this only when you intentionally want to regenerate local files from
+templates and overwrite the installed `newsyslog` config.
 
 ```bash
 make uninstall

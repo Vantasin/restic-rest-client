@@ -103,11 +103,14 @@ export RESTIC_PRUNE_ENABLED="true"
 Then rerun:
 
 ```bash
-make install-force
+make install
 ```
 
-That regenerates the local launchd and `newsyslog` assets with overwrites and
-adds or removes the prune launch agent to match `RESTIC_PRUNE_ENABLED`.
+That reloads the installed launchd agents and adds or removes the prune launch
+agent to match `RESTIC_PRUNE_ENABLED` without overwriting your local generated
+config. Use `make install-force` only when you intentionally want to
+regenerate local files from templates and overwrite the installed
+`newsyslog` config.
 
 ## What This Repo Contains
 
