@@ -5,8 +5,10 @@ Canonical human doc: `Docs/RUN_BACKUP_SCRIPT.md`
 ## Responsibilities
 
 - Load environment and local config
-- Resolve the repository location from `RESTIC_REPOSITORY` or
-  `RESTIC_REPOSITORY_FILE`
+- Resolve the repository location from `RESTIC_REPOSITORY`
+- Support default derived repository values based on
+  `RESTIC_REPOSITORY_BASE_URL` and `RESTIC_REPOSITORY_NAME`
+- Use `RESTIC_REST_*` environment variables for REST-server auth when present
 - Run `backup`, `prune`, `logcleanup`, or notification test tasks
 - Source `lib/platform.sh` for shared truthy parsing, macOS power/clamshell
   checks, file checks, and timestamped subprocess logging helpers

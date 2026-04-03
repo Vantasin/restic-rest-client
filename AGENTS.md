@@ -53,8 +53,7 @@ router.
 
 ## Repo-Wide Non-Negotiables
 
-- Never commit populated secrets such as `restic.env` or
-  `restic-repository.txt`.
+- Never commit populated secrets such as `restic.env`.
 - Treat generated local files as local state unless the task explicitly targets
   installed/generated assets.
 - Update human docs when user-visible behavior, setup, or operational defaults

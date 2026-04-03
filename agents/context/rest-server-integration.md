@@ -8,8 +8,10 @@ deployment logic locally.
 - the companion server repo is responsible for Docker Compose deployment and
   day-two server operations
 - the default access model is `--append-only --private-repos`
-- the repository URL usually embeds the REST server password, so this repo
-  keeps it in `restic-repository.txt`
+- the default client flow keeps a per-user base URL plus repository name in
+  `restic.env`, usually prompts only for the base URL and username through
+  `make configure`, derives the repository URL locally, and uses
+  `RESTIC_REST_*` instead of inline URL credentials
 - client-side prune is disabled by default and must be explicitly enabled when
   the server allows it
 

@@ -23,7 +23,11 @@ subcommand.
 ## Key environment variables
 
 - `RESTIC_HOST`
-- `RESTIC_REPOSITORY_FILE` or `RESTIC_REPOSITORY`
+- `RESTIC_REPOSITORY_BASE_URL`
+- `RESTIC_REPOSITORY_NAME`
+- `RESTIC_REST_USERNAME`
+- `RESTIC_REST_PASSWORD`
+- `RESTIC_REPOSITORY`
 - `RESTIC_PASSWORD` or `RESTIC_PASSWORD_COMMAND`
 - `RESTIC_RETRY_LOCK` (default `10m`)
 - `RESTIC_PRUNE_ENABLED` (default `false`)
@@ -60,8 +64,8 @@ Daemon logs are rotated by `newsyslog` via
 - `logcleanup` only deletes per-run logs. Fixed daemon logs are rotated by
   `newsyslog`.
 - All script output is timestamped per line, including restic output.
-- When the repository is configured through `RESTIC_REPOSITORY_FILE`, the
-  script logs a masked repository URL and the file source path.
+- The script logs a masked repository URL and `env: RESTIC_REPOSITORY` as the
+  source.
 - Notification emails are multipart text+HTML messages with the per-run log
   attached as a text file.
 - Notification test tasks do not touch the repository.

@@ -17,8 +17,9 @@ backs up to an external REST server deployed from the companion
 There are two different secrets in this model:
 
 1. Rest-server username/password
-   This is HTTP auth for the REST endpoint. In this repo it lives in the local
-   `restic-repository.txt` file.
+   This is HTTP auth for the REST endpoint. In this repo the username lives in
+   `restic.env` as `RESTIC_REST_USERNAME`, and the password is normally loaded
+   from Keychain into `RESTIC_REST_PASSWORD` when `restic.env` is sourced.
 2. Restic repository password
    This is the encryption password for the repository data itself. In this repo
    it is intended to live in macOS Keychain via `RESTIC_PASSWORD_COMMAND`.
@@ -42,15 +43,22 @@ Security consequences:
 - HTTPS is expected to be terminated by the reverse proxy layer documented in
   the server repo
 
-## Why This Client Stores The URL In A Separate File
+## Why This Client Keeps REST Auth Separate From The URL
 
-The REST repository URL usually embeds the rest-server password. Keeping it in
-`restic-repository.txt` instead of `restic.env` gives the repo a cleaner
-boundary:
+The companion server repo now prefers `RESTIC_REST_USERNAME` and
+`RESTIC_REST_PASSWORD` over inline `user:password@` URLs.
 
-- `restic.env` stays focused on client behavior and local automation
-- `restic-repository.txt` is the one local file that contains the REST auth URL
-- both files are ignored by Git and blocked by the repo-managed hook
+That keeps the default examples cleaner:
+
+- the repository URL in `restic.env` stays free of inline Basic Auth
+  credentials
+- the REST server password is stored in Keychain rather than pasted into a URL
+- the repository password remains a separate Keychain-backed secret
+
+Restic's REST backend consumes the server password through
+`RESTIC_REST_PASSWORD`, so the password is present in the environment for the
+duration of the restic process. The default model accepts that tradeoff to keep
+credentials out of tracked templates and URL examples.
 
 ## Why Prune Is Disabled By Default
 
@@ -82,8 +90,9 @@ Compromised server:
 
 ## Operational Guardrails
 
-- do not commit `restic.env` or `restic-repository.txt`
-- keep both files mode `600`
-- rotate the restic repository password with `setup_password.sh --rotate`
+- do not commit `restic.env`
+- keep it mode `600`
+- rerun `setup_password.sh --rest-server` after a server password change
+- rotate the restic repository password with
+  `setup_password.sh --repository --rotate`
 - rotate the REST server password on the server side with `create_user` again
-- update `restic-repository.txt` after a REST server password change

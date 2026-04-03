@@ -7,10 +7,10 @@ deeper reference material.
 
 ## What Lives Here
 
-- [`BOOTSTRAP.md`](./BOOTSTRAP.md): local file generation, install, uninstall,
-  and manual setup flow
-- [`RESTIC_ENV.md`](./RESTIC_ENV.md): `restic.env` and
-  `restic-repository.txt` configuration
+- [`BOOTSTRAP.md`](./BOOTSTRAP.md): local file generation, configure, install,
+  uninstall, and manual setup flow
+- [`RESTIC_ENV.md`](./RESTIC_ENV.md): `restic.env` defaults and repository
+  configuration
 - [`RUN_BACKUP_SCRIPT.md`](./RUN_BACKUP_SCRIPT.md): backup, prune, log-cleanup,
   and notification-test behavior
 - [`INCLUDE_EXCLUDE.md`](./INCLUDE_EXCLUDE.md): backup scope and include/exclude
@@ -21,8 +21,8 @@ deeper reference material.
   server security boundaries for the REST model
 - [`RESTIC_RESTORE_README.md`](./RESTIC_RESTORE_README.md): restore workflows
   and safety guidance
-- [`SETUP_PASSWORD.md`](./SETUP_PASSWORD.md): Keychain-backed repository
-  password setup and rotation
+- [`SETUP_PASSWORD.md`](./SETUP_PASSWORD.md): Keychain-backed REST server and
+  repository password setup and rotation
 - [`MAKEFILE.md`](./MAKEFILE.md): Makefile shortcuts and convenience targets
 - [`GIT_HOOKS.md`](./GIT_HOOKS.md): repo-managed Git hook installation and
   checks

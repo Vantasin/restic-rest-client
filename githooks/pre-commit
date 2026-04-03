@@ -20,9 +20,6 @@ for file in $staged_files; do
     restic.env|restic.env.*)
       [[ "$file" != "restic.env.example" ]] && blocked_files+=("$file")
       ;;
-    restic-repository.txt|restic-repository.txt.*)
-      [[ "$file" != "restic-repository.txt.example" ]] && blocked_files+=("$file")
-      ;;
     restic-include-macos.txt|restic-exclude-macos.txt)
       blocked_files+=("$file")
       ;;

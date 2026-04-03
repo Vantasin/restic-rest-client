@@ -8,8 +8,7 @@
 
 ## Repository safety
 
-- Never commit `restic.env`, `restic-repository.txt`, or other populated
-  secrets.
+- Never commit `restic.env` or other populated secrets.
 - Treat generated host-specific files as local state unless the tracked
   `.example` template is the intentional change target.
 - Do not silently change backup scope, retention, launchd timing, or power

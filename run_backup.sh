@@ -17,7 +17,7 @@ RESTIC_REPO_SOURCE="unset"
 
 # Load env vars (repo, password, host, etc.).
 if [ ! -f "$SCRIPT_DIR/restic.env" ]; then
-  echo "ERROR: $SCRIPT_DIR/restic.env not found. Run ./bootstrap.sh --install first."
+  echo "ERROR: $SCRIPT_DIR/restic.env not found. Run ./bootstrap.sh --generate or ./bootstrap.sh --install first."
   exit 1
 fi
 
@@ -83,11 +83,7 @@ load_repository_context() {
   fi
 
   RESTIC_REPO_DISPLAY_VALUE="$(mask_repository_credentials "$repo_value_or_error")"
-  if [[ -n "${RESTIC_REPOSITORY_FILE:-}" ]]; then
-    RESTIC_REPO_SOURCE="file: $RESTIC_REPOSITORY_FILE"
-  else
-    RESTIC_REPO_SOURCE="env: RESTIC_REPOSITORY"
-  fi
+  RESTIC_REPO_SOURCE="env: RESTIC_REPOSITORY"
 
   return 0
 }

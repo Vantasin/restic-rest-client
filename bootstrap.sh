@@ -20,8 +20,18 @@ if [[ -z "$HOST_NAME" ]]; then
   fi
 fi
 HOST_NAME="${HOST_NAME:-$(hostname -s 2>/dev/null || echo "your-mac")}"
+HOST_NAME_SLUG="$(
+  printf '%s' "$HOST_NAME" |
+    tr '[:upper:]' '[:lower:]' |
+    sed -E \
+      -e 's/[^a-z0-9._-]+/-/g' \
+      -e 's/^-+//; s/-+$//' \
+      -e 's/-+/-/g'
+)"
+HOST_NAME_SLUG="${HOST_NAME_SLUG:-restic-client}"
 
 force=false
+do_generate=false
 do_install=false
 do_uninstall=false
 
@@ -34,12 +44,12 @@ is_true() {
 
 usage() {
   cat <<'EOF'
-Usage: ./bootstrap.sh --install [--force]
+Usage: ./bootstrap.sh --generate [--force]
+       ./bootstrap.sh --install [--force]
        ./bootstrap.sh --uninstall
 
 Generate host-specific config from the *.example templates:
 - restic.env
-- restic-repository.txt
 - restic-include-macos.txt
 - restic-exclude-macos.txt
 - launchd/*.plist
@@ -49,8 +59,10 @@ Placeholders replaced:
 - {{USER}}       -> your username
 - {{SCRIPT_DIR}} -> repo directory containing this script
 - {{HOSTNAME}}   -> system hostname (ComputerName)
+- {{HOSTNAME_SLUG}} -> URL-safe hostname slug derived from ComputerName
 
 Optional:
+- --generate   Generate local files only
 - --install    Generate local files and install launchd/newsyslog
 - --uninstall  Unload/remove launchd and newsyslog, and remove local files
 - --force      Overwrite local files and /etc/newsyslog.d/com.restic-rest-client.conf
@@ -59,6 +71,9 @@ EOF
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --generate)
+      do_generate=true
+      ;;
     --force)
       force=true
       ;;
@@ -81,13 +96,18 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-if [[ "$do_install" == "true" && "$do_uninstall" == "true" ]]; then
-  echo "ERROR: choose only one of --install or --uninstall."
+selected_actions=0
+[[ "$do_generate" == "true" ]] && ((selected_actions+=1))
+[[ "$do_install" == "true" ]] && ((selected_actions+=1))
+[[ "$do_uninstall" == "true" ]] && ((selected_actions+=1))
+
+if (( selected_actions > 1 )); then
+  echo "ERROR: choose only one of --generate, --install, or --uninstall."
   exit 1
 fi
 
-if [[ "$do_install" != "true" && "$do_uninstall" != "true" ]]; then
-  echo "ERROR: must specify --install or --uninstall."
+if (( selected_actions == 0 )); then
+  echo "ERROR: must specify --generate, --install, or --uninstall."
   usage
   exit 1
 fi
@@ -99,7 +119,7 @@ escape_sed() {
 write_from_template() {
   local src="$1"
   local dest="$2"
-  local home_escaped user_escaped script_escaped host_escaped tmp
+  local home_escaped user_escaped script_escaped host_escaped host_slug_escaped tmp
 
   if [[ ! -f "$src" ]]; then
     echo "ERROR: template not found: $src"
@@ -115,6 +135,7 @@ write_from_template() {
   user_escaped="$(escape_sed "$USER_NAME")"
   script_escaped="$(escape_sed "$SCRIPT_DIR")"
   host_escaped="$(escape_sed "$HOST_NAME")"
+  host_slug_escaped="$(escape_sed "$HOST_NAME_SLUG")"
   tmp="${dest}.tmp"
 
   sed \
@@ -122,6 +143,7 @@ write_from_template() {
     -e "s|{{USER}}|${user_escaped}|g" \
     -e "s|{{SCRIPT_DIR}}|${script_escaped}|g" \
     -e "s|{{HOSTNAME}}|${host_escaped}|g" \
+    -e "s|{{HOSTNAME_SLUG}}|${host_slug_escaped}|g" \
     "$src" > "$tmp"
 
   mv "$tmp" "$dest"
@@ -178,22 +200,36 @@ verify_launchd_unloaded() {
 }
 
 load_prune_preference() {
+  local prune_enabled
+
   if [[ ! -f "$SCRIPT_DIR/restic.env" ]]; then
     printf 'false'
     return 0
   fi
 
-  unset RESTIC_PRUNE_ENABLED
-  source "$SCRIPT_DIR/restic.env"
-  printf '%s' "${RESTIC_PRUNE_ENABLED:-false}"
+  # Evaluate restic.env in a helper shell so quoted values and inline comments
+  # behave the same way as normal runtime sourcing. Stub Keychain lookups so
+  # install can still inspect prune mode before the user stores passwords.
+  if ! prune_enabled="$(
+    zsh -c '
+      security() {
+        printf "%s\n" "stub"
+      }
+
+      source "$1"
+      printf "%s" "${RESTIC_PRUNE_ENABLED:-false}"
+    ' zsh "$SCRIPT_DIR/restic.env"
+  )"; then
+    echo "ERROR: failed to evaluate RESTIC_PRUNE_ENABLED from $SCRIPT_DIR/restic.env"
+    return 1
+  fi
+
+  printf '%s' "$prune_enabled"
 }
 
-if [[ "$do_install" == "true" ]]; then
+if [[ "$do_generate" == "true" || "$do_install" == "true" ]]; then
   write_from_template "$SCRIPT_DIR/restic.env.example" "$SCRIPT_DIR/restic.env"
   [[ -f "$SCRIPT_DIR/restic.env" ]] && chmod 600 "$SCRIPT_DIR/restic.env"
-
-  write_from_template "$SCRIPT_DIR/restic-repository.txt.example" "$SCRIPT_DIR/restic-repository.txt"
-  [[ -f "$SCRIPT_DIR/restic-repository.txt" ]] && chmod 600 "$SCRIPT_DIR/restic-repository.txt"
 
   write_from_template "$SCRIPT_DIR/restic-include-macos.txt.example" "$SCRIPT_DIR/restic-include-macos.txt"
   write_from_template "$SCRIPT_DIR/restic-exclude-macos.txt.example" "$SCRIPT_DIR/restic-exclude-macos.txt"
@@ -270,12 +306,14 @@ if [[ "$do_install" == "true" ]]; then
     user_escaped="$(escape_sed "$USER_NAME")"
     script_escaped="$(escape_sed "$SCRIPT_DIR")"
     host_escaped="$(escape_sed "$HOST_NAME")"
+    host_slug_escaped="$(escape_sed "$HOST_NAME_SLUG")"
 
     sed \
       -e "s|{{HOME}}|${home_escaped}|g" \
       -e "s|{{USER}}|${user_escaped}|g" \
       -e "s|{{SCRIPT_DIR}}|${script_escaped}|g" \
       -e "s|{{HOSTNAME}}|${host_escaped}|g" \
+      -e "s|{{HOSTNAME_SLUG}}|${host_slug_escaped}|g" \
       "$local_conf" > "$tmp_conf"
 
     if ! command -v sudo >/dev/null 2>&1; then
@@ -362,7 +400,6 @@ fi
 if [[ "$do_uninstall" == "true" ]]; then
   echo "Removing local generated files..."
   remove_file "$SCRIPT_DIR/restic.env"
-  remove_file "$SCRIPT_DIR/restic-repository.txt"
   remove_file "$SCRIPT_DIR/restic-include-macos.txt"
   remove_file "$SCRIPT_DIR/restic-exclude-macos.txt"
   remove_file "$SCRIPT_DIR/launchd/$BACKUP_PLIST_NAME"

@@ -1,23 +1,32 @@
 # Restic Environment Configuration
 
 `restic.env` is the main local config file for this client. It is generated
-from `restic.env.example` and should never be committed.
+from `restic.env.example`, should never be committed, and is now the default
+home for:
 
-This repo also generates `restic-repository.txt` from
-`restic-repository.txt.example`. That file holds the REST repository URL so the
-REST server password does not need to live in `restic.env`.
+- the repository URL
+- the REST server username
+- the Keychain-backed REST server password lookup
+- the Keychain-backed repository password lookup
 
 ## Setup
 
 ```bash
-cp restic.env.example restic.env
-cp restic-repository.txt.example restic-repository.txt
-chmod 600 restic.env restic-repository.txt
+make bootstrap
+make configure
 ```
 
-Only set one restic password method and one repository-location method.
+That generates `restic.env` plus the other local config files, applies
+`chmod 600` to `restic.env`, then prompts for the required REST base URL and
+username.
 
-## Host label
+After that, edit `restic.env` only for optional settings or manual overrides.
+The tracked example still carries the common default runtime settings used by
+this repo.
+
+Only set one repository-password method.
+
+## Host Label
 
 `RESTIC_HOST` is the machine label shown in `restic snapshots`.
 
@@ -28,60 +37,84 @@ export RESTIC_HOST="my-macbook"
 Changing the host label does not corrupt the repo, but prune policies apply per
 host, so old labels will no longer be pruned automatically.
 
-## Repository password options
+## REST Server Access
+
+Recommended default:
+
+```bash
+export RESTIC_REPOSITORY_BASE_URL="https://backup.example.com/backup"
+export RESTIC_REPOSITORY_NAME="my-macbook"
+export RESTIC_REPOSITORY="rest:${RESTIC_REPOSITORY_BASE_URL%/}/${RESTIC_REPOSITORY_NAME}"
+export RESTIC_REST_USERNAME="backup"
+export RESTIC_REST_PASSWORD="$(security find-generic-password -a restic-rest-client-rest-server -s restic-rest-client-rest-server -w)"
+```
+
+Notes:
+
+- the server admin should provide the base per-user HTTPS repository URL plus
+  the REST username/password
+- `make configure` prompts for `RESTIC_REPOSITORY_BASE_URL` and
+  `RESTIC_REST_USERNAME`, then keeps or writes local defaults for
+  `RESTIC_REPOSITORY_NAME` and `RESTIC_HOST`
+- `RESTIC_REPOSITORY_NAME` is the client-side repo path segment created under
+  that base URL
+- `RESTIC_REPOSITORY` should include the `rest:` backend prefix and is derived
+  from the base URL plus repository name by default
+- `RESTIC_REPOSITORY_NAME` defaults to a URL-safe slug derived from the local
+  machine name when bootstrap generates `restic.env`
+- restic's REST backend consumes `RESTIC_REST_USERNAME` and
+  `RESTIC_REST_PASSWORD`, so the default template loads the server password
+  from Keychain when `restic.env` is sourced
+- after the server admin changes the password with `create_user` again, rerun
+  `./setup_password.sh --rest-server` or `make setup-rest-server-password`
+
+Manual fallback, if you intentionally keep the server password in local env
+state:
+
+```bash
+export RESTIC_REST_PASSWORD="SERVER_PASSWORD"
+```
+
+## Repository Password
 
 Preferred: Keychain-backed password retrieval.
 
-```bash
-security add-generic-password -a restic-rest-client-macbook -s restic-rest-client-macbook -w "YOUR_LONG_PASSWORD" -U
-export RESTIC_PASSWORD_COMMAND='security find-generic-password -a restic-rest-client-macbook -s restic-rest-client-macbook -w'
-```
-
-The repo root also provides:
+Use the provided script:
 
 ```bash
-./setup_password.sh
-./setup_password.sh --rotate
+./setup_password.sh --repository
+./setup_password.sh --repository --rotate
 ```
 
-Fallback, if you intentionally keep the password in local env state:
+Makefile alternatives:
+
+```bash
+make setup-repository-password
+make setup-repository-password-rotate
+```
+
+Those commands manage a Keychain entry and write:
+
+```bash
+export RESTIC_PASSWORD_COMMAND="security find-generic-password -a restic-rest-client-repository -s restic-rest-client-repository -w"
+```
+
+After the server password is stored and the repository password is generated,
+run:
+
+```bash
+make init-repo
+```
+
+That is the client-side repository creation and verification step.
+
+Fallback, if you intentionally keep the repository password in local env state:
 
 ```bash
 export RESTIC_PASSWORD="YOUR_LONG_RANDOM_PASSWORD"
 ```
 
-## Repository location options
-
-Recommended default: `RESTIC_REPOSITORY_FILE`
-
-Keep the REST URL in `restic-repository.txt`:
-
-```bash
-export RESTIC_REPOSITORY_FILE="{{SCRIPT_DIR}}/restic-repository.txt"
-```
-
-The file should contain only the repository URL, for example:
-
-```text
-rest:https://backup:<SERVER_PASSWORD>@backup.example.com/backup/my-macbook
-```
-
-This matches the companion `restic-rest-server` repo's default
-`--private-repos` layout, where user `backup` is limited to paths under
-`backup/...`.
-
-Optional inline alternative:
-
-```bash
-export RESTIC_REPOSITORY="rest:https://backup:<SERVER_PASSWORD>@backup.example.com/backup/my-macbook"
-```
-
-Do not set both `RESTIC_REPOSITORY` and `RESTIC_REPOSITORY_FILE`.
-
-If the REST server password contains URL-reserved characters, URL-encode the
-password before storing it in the URL.
-
-## Prune mode
+## Prune Mode
 
 The companion `restic-rest-server` repo defaults to append-only mode, so this
 client repo defaults to disabled client-side prune:
@@ -106,12 +139,13 @@ export RESTIC_PRUNE_ENABLED="true"
 After changing it, rerun:
 
 ```bash
-./bootstrap.sh --install --force
+make install-force
 ```
 
-That installs or removes the prune launch agent to match the new mode.
+That regenerates the local launchd and `newsyslog` assets with overwrites and
+installs or removes the prune launch agent to match the new mode.
 
-## Email notifications
+## Email Notifications
 
 If `RESTIC_NOTIFY_EMAIL` is set, `run_backup.sh` can send failure and success
 notifications as multipart text+HTML emails with the per-run log attached:
@@ -141,7 +175,7 @@ Test commands:
 
 Those exercise the notification path without contacting the repository.
 
-## Lock retry
+## Lock Retry
 
 Wait for an active restic lock instead of failing immediately:
 
@@ -149,7 +183,7 @@ Wait for an active restic lock instead of failing immediately:
 export RESTIC_RETRY_LOCK="10m"
 ```
 
-## Log retention
+## Log Retention
 
 Per-run logs older than this many days are deleted by `run_backup.sh
 logcleanup`:
@@ -158,7 +192,7 @@ logcleanup`:
 export RESTIC_LOG_RETENTION_DAYS="14"
 ```
 
-## Laptop power guards
+## Laptop Power Guards
 
 On MacBooks, battery or sleep transitions can interrupt backups and leave stale
 restic locks. You can tell `run_backup.sh` to skip backup or prune runs in
@@ -175,7 +209,7 @@ Backup guards apply only to `backup`. Prune guards apply only to `prune`.
 Clamshell guards default to `false` because closed-lid use on AC power can be
 normal for docked MacBooks.
 
-## Prune policy overrides
+## Prune Policy Overrides
 
 `run_backup.sh` uses these defaults when prune is enabled:
 
@@ -185,9 +219,10 @@ export RESTIC_KEEP_WEEKLY="4"
 export RESTIC_KEEP_MONTHLY="6"
 ```
 
-## Safety notes
+## Safety Notes
 
 - Never commit a populated `restic.env`.
-- Never commit a populated `restic-repository.txt`.
-- Keep both files at mode `600`.
+- Keep `restic.env` at mode `600`.
 - The REST server password and the restic repository password are separate.
+- If the Keychain entries do not exist yet, `source restic.env` will fail until
+  you run the matching password setup command.

@@ -30,7 +30,7 @@ This exports variables such as:
 
 - `RESTIC_REPOSITORY`
 - `RESTIC_PASSWORD` or `RESTIC_PASSWORD_COMMAND`
-- Any backend-specific credentials or local repository URL files
+- Any backend-specific credentials
 
 ### Verify access
 

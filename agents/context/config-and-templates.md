@@ -13,9 +13,8 @@ from them.
 
 ## High-sensitivity files
 
-- `restic.env.example`: env contract and documented defaults
-- `restic-repository.txt.example`: repository URL template that ultimately
-  holds the REST server password in local state
+- `restic.env.example`: default env contract for the per-user base URL,
+  repository name, REST username, and Keychain-backed password lookups
 - `restic-include-macos.txt.example`: top-level backup roots
 - `restic-exclude-macos.txt.example`: exclusions and backup-scope trimming
 - `launchd/*.plist.example`: schedule/path defaults for generated agents
@@ -25,6 +24,8 @@ from them.
 - Do not commit populated secrets.
 - Scope changes in include/exclude templates can create large snapshot diffs.
 - Example defaults should match the current intended operator policy.
+- `{{HOSTNAME}}` and `{{HOSTNAME_SLUG}}` placeholder behavior must stay aligned
+  between `bootstrap.sh` and the tracked templates.
 - If a task changes only a local generated file, say that explicitly.
 
 ## Common drift risk

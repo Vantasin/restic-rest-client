@@ -4,12 +4,13 @@ Run this review after core repository-function changes, including:
 
 - `run_backup.sh`
 - `bootstrap.sh`
+- `configure_env.sh`
+- `init_repo.sh`
 - `setup_password.sh`
 - `Makefile`
 - `launchd/*.plist.example`
 - `newsyslog/*.example`
 - `restic.env.example`
-- `restic-repository.txt.example`
 - `restic-include-macos.txt.example`
 - `restic-exclude-macos.txt.example`
 - human docs in `Docs/` or `README.md` when they describe changed behavior

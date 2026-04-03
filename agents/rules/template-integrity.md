@@ -13,7 +13,6 @@ backup-scope defaults.
 ## Applies to
 
 - `restic.env.example`
-- `restic-repository.txt.example`
 - `restic-include-macos.txt.example`
 - `restic-exclude-macos.txt.example`
 - `launchd/*.plist.example`

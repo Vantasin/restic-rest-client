@@ -5,8 +5,8 @@ server deployed from the companion `restic-rest-server` repo.
 
 The server repo handles container deployment, reverse proxy integration, and
 host storage layout. This client repo handles local macOS automation,
-Keychain-backed repository passwords, launchd scheduling, and local log
-rotation.
+Keychain-backed REST credentials, Keychain-backed repository passwords,
+launchd scheduling, and local log rotation.
 
 ## Assumed Server Defaults
 
@@ -26,6 +26,8 @@ That means:
 
 From the server side, the matching repo is `restic-rest-server`. Use that
 repo's human docs for deployment and day-two operations:
+
+<https://github.com/Vantasin/restic-rest-server.git>
 
 - `README.md`
 - `Docs/DEPLOYMENT.md`
@@ -48,61 +50,93 @@ docker compose exec rest-server create_user backup
 
 That creates or updates the HTTP auth credentials for user `backup`.
 
-## 3. Build the repository URL
+## 3. Hand off the client-specific details
 
 For the default `--private-repos` model, the client repository path must start
-with the username:
+with the username. The server admin should give the client:
+
+- the base per-user HTTPS repository URL without inline credentials, for
+  example `https://backup.example.com/backup`
+- the REST username, for example `backup`
+- the REST password that was set during `create_user`
+
+The client then chooses a repository name under that base URL. For example, if
+the client chooses `laptop`, the corresponding restic repository URL will be:
 
 ```text
-rest:https://backup:<SERVER_PASSWORD>@backup.example.com/backup/my-macbook
+rest:https://backup.example.com/backup/laptop
 ```
 
-Store that URL in the client's local `restic-repository.txt`.
-
-The repository URL contains the rest-server HTTP password. The restic
-repository password is separate and should be stored through
-`setup_password.sh`.
+The restic repository password is separate and should be generated or supplied
+on the client side.
 
 ## 4. Configure the client repo
 
 From this repo:
 
 ```bash
-./bootstrap.sh --install
-./setup_password.sh
+make bootstrap
+make configure
 ```
 
-Then edit:
+The configure step prompts for:
 
-- `restic.env`
-- `restic-repository.txt`
+- `RESTIC_REPOSITORY_BASE_URL` using the admin-provided HTTPS base URL
+- `RESTIC_REST_USERNAME`
 
-At minimum:
+It keeps the generated local defaults for:
 
-- set `RESTIC_HOST`
-- set the repository URL in `restic-repository.txt`
+- `RESTIC_REPOSITORY_NAME`
+- `RESTIC_HOST`
 
-## 5. Initialize the repository
+Pass `./configure_env.sh --repo-name NAME --host LABEL` if the client wants to
+override those defaults during setup.
+
+After `make configure`, review `restic.env` if you want to change optional
+settings such as prune mode, notifications, or power guards.
+
+## 5. Store the passwords
+
+Store the admin-provided REST server password:
+
+```bash
+make setup-rest-server-password
+```
+
+Generate the repository password:
+
+```bash
+make setup-repository-password
+```
+
+## 6. Initialize the repository
 
 From the client:
 
 ```bash
-source restic.env
-restic init
-restic snapshots
+make init-repo
 ```
 
-The first `init` chooses the restic encryption password currently configured by
-`RESTIC_PASSWORD_COMMAND` or `RESTIC_PASSWORD`.
+This is the step where the client creates the repository for the first time.
+It uses the restic encryption password currently configured by
+`RESTIC_PASSWORD_COMMAND` or `RESTIC_PASSWORD`, then verifies access with
+`restic snapshots`. If the repository already exists, it skips `restic init`
+and only verifies access.
 
-## 6. Test the automation path
+## 7. Install the automation
+
+```bash
+make install
+```
+
+## 8. Test the automation path
 
 ```bash
 launchctl kickstart -k gui/$UID/com.restic-rest-client.backup
 tail -n 40 -f ~/Library/Logs/restic-rest-client/daemon_backup.log
 ```
 
-## 7. Decide whether the client should prune
+## 9. Decide whether the client should prune
 
 With the companion server repo's default append-only mode:
 
@@ -124,5 +158,9 @@ export RESTIC_PRUNE_ENABLED="true"
 And reinstall the launchd assets:
 
 ```bash
-./bootstrap.sh --install --force
+make install-force
 ```
+
+That rewrites the local launchd and `newsyslog` assets with overwrites and
+adds the prune launch agent so the installed automation matches the new prune
+mode.

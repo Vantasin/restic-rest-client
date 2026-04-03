@@ -37,3 +37,6 @@ Each entry should cover:
 - [`0001-template-first-config.md`](./0001-template-first-config.md)
 - [`0002-separate-human-and-agent-docs.md`](./0002-separate-human-and-agent-docs.md)
 - [`0003-rest-server-client-defaults.md`](./0003-rest-server-client-defaults.md)
+- [`0004-rest-auth-via-restic-env.md`](./0004-rest-auth-via-restic-env.md)
+- [`0005-base-url-and-init-target.md`](./0005-base-url-and-init-target.md)
+- [`0006-drop-repository-file-path.md`](./0006-drop-repository-file-path.md)

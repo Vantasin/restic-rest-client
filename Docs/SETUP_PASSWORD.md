@@ -1,71 +1,93 @@
 # Keychain Password Setup
 
-`setup_password.sh` generates a strong random password, stores it in macOS
-Keychain, and writes `RESTIC_PASSWORD_COMMAND` into `restic.env`.
+`setup_password.sh` manages two different secrets:
 
-This script manages the restic repository password, not the REST server
-password. The REST server password remains part of the local repository URL in
-`restic-repository.txt`.
+1. The REST server HTTP password supplied by the server admin
+2. The restic repository password used to encrypt repository contents
 
-## What It Does
+Both flows update `restic.env` so later `source restic.env` calls pick up the
+matching Keychain entries.
 
-- generates a random password with `openssl rand -hex`
-- stores it in Keychain under an account/service name
-- updates `restic.env` with the matching `RESTIC_PASSWORD_COMMAND`
-- verifies the Keychain entry and the `restic.env` update
+## REST Server Password
 
-## Usage
+Use this when the server admin gives you the REST username/password for the
+repository URL. Run `make configure` first so `restic.env` already has the
+base URL and username populated and local defaults selected for the repository
+name and host label.
 
 From the repo root:
 
 ```bash
-./setup_password.sh
+./setup_password.sh --rest-server
 ```
 
 Makefile alternative:
 
 ```bash
-make setup-password
+make setup-rest-server-password
 ```
+
+This flow:
+
+- prompts for the admin-provided password without echoing it
+- stores or updates the Keychain entry
+- updates `RESTIC_REST_PASSWORD` in `restic.env`
 
 Default Keychain names:
 
-- account: `restic-rest-client-macbook`
-- service: `restic-rest-client-macbook`
+- account: `restic-rest-client-rest-server`
+- service: `restic-rest-client-rest-server`
+
+Rerun the same command after the server admin changes the password with
+`create_user` again.
+
+## Repository Password
+
+Use this when the client is creating the repository and needs a new random
+restic password before `make init-repo`.
+
+From the repo root:
+
+```bash
+./setup_password.sh --repository
+```
+
+Makefile alternative:
+
+```bash
+make setup-repository-password
+```
+
+This flow:
+
+- generates a random password with `openssl rand -hex`
+- stores it in Keychain under an account/service name
+- updates `RESTIC_PASSWORD_COMMAND` in `restic.env`
+- verifies the Keychain entry and the `restic.env` update
+
+Default Keychain names:
+
+- account: `restic-rest-client-repository`
+- service: `restic-rest-client-repository`
 
 Optional overrides:
 
 ```bash
-./setup_password.sh --account restic-rest-client-work --service restic-rest-client-work --length 32
-```
-
-If a Keychain entry already exists, the script stops unless you pass
-`--rotate`:
-
-```bash
-./setup_password.sh --rotate
-```
-
-## Verify
-
-```bash
-security find-generic-password -a restic-rest-client-macbook -s restic-rest-client-macbook -w
-rg -n "RESTIC_PASSWORD_COMMAND" restic.env
+./setup_password.sh --repository --account restic-rest-client-work --service restic-rest-client-work --length 32
 ```
 
 ## Rotation
 
-Run the script again to rotate the repository password, update the Keychain
-entry, and update `restic.env`:
+Rotate the repository password:
 
 ```bash
-./setup_password.sh --rotate
+./setup_password.sh --repository --rotate
 ```
 
 Makefile alternative:
 
 ```bash
-make setup-password-rotate
+make setup-repository-password-rotate
 ```
 
 Rotation requires:
@@ -76,16 +98,28 @@ Rotation requires:
 
 The script verifies repository access before rotating the password.
 
-If you rotate credentials, remember to update any other machines that access
+If you rotate the repository password, update any other machines that access
 the same repository.
 
-## Back Up The Password
-
-Store the password in your password manager or another encrypted backup. On
-macOS:
+## Verify
 
 ```bash
-security find-generic-password -a restic-rest-client-macbook -s restic-rest-client-macbook -w | pbcopy
+security find-generic-password -a restic-rest-client-rest-server -s restic-rest-client-rest-server -w
+security find-generic-password -a restic-rest-client-repository -s restic-rest-client-repository -w
+rg -n "RESTIC_REST_PASSWORD|RESTIC_PASSWORD_COMMAND" restic.env
+```
+
+Because restic consumes REST server auth via `RESTIC_REST_PASSWORD`, the script
+writes a Keychain command substitution into `restic.env` for that variable.
+The repository password still uses `RESTIC_PASSWORD_COMMAND`.
+
+## Back Up The Repository Password
+
+Store the repository password in your password manager or another encrypted
+backup. On macOS:
+
+```bash
+security find-generic-password -a restic-rest-client-repository -s restic-rest-client-repository -w | pbcopy
 ```
 
 Clear the clipboard afterward:

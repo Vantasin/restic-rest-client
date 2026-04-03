@@ -12,8 +12,7 @@ Update human docs when a change touches:
 
 - `run_backup.sh` task behavior, exit handling, notifications, or power guards
 - `launchd` schedules, agent names, or installed paths
-- `restic.env.example` or `restic-repository.txt.example` variables or
-  expected configuration
+- `restic.env.example` variables or expected configuration
 - include/exclude defaults or backup-scope expectations
 - bootstrap/install/uninstall behavior
 - restore, server, or security behavior

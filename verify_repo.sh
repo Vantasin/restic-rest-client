@@ -35,6 +35,8 @@ check_shell() {
   local file
   local -a shell_files=(
     "run_backup.sh"
+    "configure_env.sh"
+    "init_repo.sh"
     "lib/platform.sh"
     "lib/notifications.sh"
     "lib/tasks.sh"

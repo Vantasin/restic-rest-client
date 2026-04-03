@@ -28,8 +28,6 @@ git config core.hooksPath githooks
 - blocks generated or local-only files from being committed:
   - `restic.env`
   - `restic.env.*` except `restic.env.example`
-  - `restic-repository.txt`
-  - `restic-repository.txt.*` except `restic-repository.txt.example`
   - `restic-include-macos.txt`
   - `restic-exclude-macos.txt`
   - local `launchd/*.plist` files that are not `.example` templates

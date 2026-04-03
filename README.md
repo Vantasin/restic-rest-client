@@ -1,79 +1,79 @@
 # restic-rest-client
 
 Opinionated macOS restic client automation for backing up to an external
-`restic/rest-server` deployment. This repo keeps the same local automation
-shape as the original `Restic` repo, but the defaults are aligned to the
-companion `restic-rest-server` deployment model: HTTPS, `--private-repos`, and
-append-only by default.
+`restic/rest-server` deployment, with template-based local config,
+Keychain-backed secrets, and launchd/newsyslog automation. The defaults are
+aligned to the companion `restic-rest-server` deployment model: HTTPS,
+`--private-repos`, and append-only by default.
+
+Companion server repo:
+<https://github.com/Vantasin/restic-rest-server.git>
 
 ## Quick Start
 
-### 1. Clone and install
+### 1. Clone the repo
 
 ```bash
-git clone <REPO_URL> "$HOME/Git/restic-rest-client"
+git clone https://github.com/Vantasin/restic-rest-client.git "$HOME/Git/restic-rest-client"
 cd "$HOME/Git/restic-rest-client"
-./bootstrap.sh --install
 ```
 
-Optional:
+### 2. Generate local config and set server details
+
+Run:
+
+```bash
+make bootstrap
+make configure
+```
+
+The server admin should provide:
+
+- the base per-user HTTPS repository URL
+- the REST username
+- the REST password
+
+`make configure` prompts only for the base URL and username. It keeps the
+local defaults for `RESTIC_REPOSITORY_NAME` and `RESTIC_HOST`, and
+`restic.env` derives the final `RESTIC_REPOSITORY` from those values. Edit
+`restic.env` afterward only if you want to change optional settings such as
+repo name, host label, prune mode, retention, notifications, or power guards.
+
+### 3. Store passwords in Keychain
+
+```bash
+make setup-rest-server-password
+```
+
+```bash
+make setup-repository-password
+```
+
+The first command stores the admin-provided REST server password and updates
+`RESTIC_REST_PASSWORD` in `restic.env`. The second generates the restic repository password, stores it in Keychain, and updates `RESTIC_PASSWORD_COMMAND`.
+
+### 4. Initialize the repository and verify access
+
+```bash
+make init-repo
+```
+
+This is the step where the client creates the repository for the first time.
+If the repository already exists, it skips `restic init` and just verifies
+access.
+
+### 5. Install automation
 
 ```bash
 make install
 ```
 
-By default, install writes local config, installs backup and log-cleanup
-launchd agents, and installs the `newsyslog` config. The prune agent is only
-installed when `RESTIC_PRUNE_ENABLED=true`.
+This installs the backup and log-cleanup launchd agents plus the `newsyslog`
+config. The prune agent is installed only when `RESTIC_PRUNE_ENABLED=true`.
 
-### 2. Enable repo-managed Git hooks
-
-```bash
-make install-hooks
-```
-
-### 3. Set up the restic repository password
+### 6. Test the scheduled path
 
 ```bash
-./setup_password.sh
-```
-
-Optional:
-
-```bash
-make setup-password
-```
-
-This stores the restic encryption password in Keychain. It does not set the
-REST server password used in the repository URL.
-
-### 4. Configure the client
-
-Edit these local files:
-
-- `restic.env`
-- `restic-repository.txt`
-
-Set at minimum:
-
-- `RESTIC_HOST` in `restic.env`
-- the repository URL in `restic-repository.txt`
-
-Default repository URL pattern for the companion server repo:
-
-```text
-rest:https://backup:<SERVER_PASSWORD>@backup.example.com/backup/<HOSTNAME>
-```
-
-This matches the server repo's default `--private-repos` model, where user
-`backup` can access paths under `backup/...`.
-
-### 5. Initialize and test
-
-```bash
-source restic.env
-restic init
-restic snapshots
 launchctl kickstart -k gui/$UID/com.restic-rest-client.backup
 tail -n 40 -f ~/Library/Logs/restic-rest-client/daemon_backup.log
 ```
@@ -81,9 +81,10 @@ tail -n 40 -f ~/Library/Logs/restic-rest-client/daemon_backup.log
 ## Access Model
 
 - Rest-server username/password:
-  HTTP auth credentials used in `restic-repository.txt`
+  HTTP auth credentials exposed to restic through `RESTIC_REST_USERNAME` and
+  `RESTIC_REST_PASSWORD`
 - Restic repository password:
-  encryption password stored in Keychain or otherwise provided to restic
+  encryption password stored in Keychain through `RESTIC_PASSWORD_COMMAND`
 
 These are separate secrets.
 
@@ -102,10 +103,11 @@ export RESTIC_PRUNE_ENABLED="true"
 Then rerun:
 
 ```bash
-./bootstrap.sh --install --force
+make install-force
 ```
 
-That installs the prune launch agent in addition to backup and log cleanup.
+That regenerates the local launchd and `newsyslog` assets with overwrites and
+adds or removes the prune launch agent to match `RESTIC_PRUNE_ENABLED`.
 
 ## What This Repo Contains
 
@@ -113,11 +115,13 @@ That installs the prune launch agent in addition to backup and log cleanup.
   notification-test entry point
 - [`bootstrap.sh`](./bootstrap.sh): generates local files and installs
   launchd/newsyslog assets
-- [`setup_password.sh`](./setup_password.sh): Keychain-backed repository
-  password setup and rotation
+- [`configure_env.sh`](./configure_env.sh): populates the required REST
+  settings in `restic.env`
+- [`init_repo.sh`](./init_repo.sh): initializes the configured repository and
+  verifies access
+- [`setup_password.sh`](./setup_password.sh): Keychain-backed REST server
+  password storage plus repository-password setup and rotation
 - [`restic.env.example`](./restic.env.example): tracked env template
-- [`restic-repository.txt.example`](./restic-repository.txt.example): tracked
-  repository-URL template
 - [`Docs/README.md`](./Docs/README.md): human-readable reference docs
 - [`AGENTS.md`](./AGENTS.md) and [`agents/`](./agents/README.md): agent-facing
   repo rules, context, and workflows
@@ -128,6 +132,12 @@ Run fast verification:
 
 ```bash
 make verify
+```
+
+Install the optional repo-managed Git hook:
+
+```bash
+make install-hooks
 ```
 
 Run a backup:
@@ -211,7 +221,8 @@ locally or exclude them intentionally.
 
 ## Repository Notes
 
-- `restic.env` and `restic-repository.txt` are local state and must not be
-  committed.
-- `./bootstrap.sh --install` prompts for `sudo` to install the `newsyslog`
-  config.
+- `restic.env` is local state and must not be committed.
+- `make bootstrap` writes local files only.
+- `make configure` populates the required REST settings in `restic.env`.
+- `make install` and `./bootstrap.sh --install` prompt for `sudo` to install
+  the `newsyslog` config.

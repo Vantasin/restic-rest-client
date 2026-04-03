@@ -13,16 +13,19 @@ external REST-server backend.
   failure-classification helpers used by `run_backup.sh`
 - `lib/tasks.sh`: sourced backup, prune, and logcleanup task helpers used by
   `run_backup.sh`
-- `bootstrap.sh`: generates local files from tracked templates and installs
+- `bootstrap.sh`: generates local files from tracked templates and can install
   launchd/newsyslog assets
-- `setup_password.sh`: manages the Keychain-backed restic password flow
+- `configure_env.sh`: populates required REST settings in `restic.env`
+- `init_repo.sh`: initializes the configured repository and verifies access
+- `setup_password.sh`: manages the Keychain-backed REST server and repository
+  password flow
 - `githooks/`: repo-managed Git hook checks for fast consistency validation
 - `launchd/*.plist.example`: tracked launchd templates
 - `restic.env.example`: tracked environment template
-- `restic-repository.txt.example`: tracked repository-URL template
 - `restic-include-macos.txt.example`: tracked backup root template
 - `restic-exclude-macos.txt.example`: tracked exclude template
-- `Makefile`: convenience wrapper for bootstrap/password tasks
+- `Makefile`: convenience wrapper for bootstrap/configure/password tasks and
+  repository init
 - `Docs/`: canonical human-readable component documentation
 
 ## Generated local state
@@ -31,7 +34,6 @@ These are expected local/generated files and should not be treated as the main
 committed source of truth unless the task explicitly targets installed state:
 
 - `restic.env`
-- `restic-repository.txt`
 - `restic-include-macos.txt`
 - `restic-exclude-macos.txt`
 - `launchd/com.restic-rest-client.backup.plist`
@@ -57,4 +59,8 @@ committed source of truth unless the task explicitly targets installed state:
 - current focus: macOS client backup automation
 - backend model: external `restic/rest-server` deployment documented elsewhere
 - default access mode assumption: `--append-only --private-repos`
+- default auth model: repository URL in `restic.env`, REST auth via
+  `RESTIC_REST_*`, repository password via `RESTIC_PASSWORD_COMMAND`
+- default repository model: derive `RESTIC_REPOSITORY` from
+  `RESTIC_REPOSITORY_BASE_URL` and `RESTIC_REPOSITORY_NAME`
 - keep client automation separate from server deployment implementation
