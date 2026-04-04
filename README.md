@@ -88,12 +88,19 @@ make install
 
 This installs the backup and log-cleanup launchd agents plus the `newsyslog`
 config. The prune agent is installed only when `RESTIC_PRUNE_ENABLED=true`.
+The backup agent also runs once immediately when it is loaded.
 
-### 6. Test the scheduled path
+### 6. Watch the first scheduled-path run
+
+```bash
+tail -n 40 -f ~/Library/Logs/restic-rest-client/daemon_backup.log
+```
+
+If you want to rerun the backup after that initial load-triggered run has
+finished, use:
 
 ```bash
 launchctl kickstart -k gui/$UID/com.restic-rest-client.backup
-tail -n 40 -f ~/Library/Logs/restic-rest-client/daemon_backup.log
 ```
 
 ## Access Model

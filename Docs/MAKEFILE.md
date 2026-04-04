@@ -42,7 +42,8 @@ This prompts for `sudo` to install the `newsyslog` config.
 Backup and log cleanup are always installed. Prune is installed only when
 `RESTIC_PRUNE_ENABLED=true`. Rerun `make install` after changing
 `RESTIC_PRUNE_ENABLED` so the installed launchd assets match the new prune
-mode without overwriting local generated config.
+mode without overwriting local generated config. The backup launch agent also
+runs once immediately when it is loaded.
 
 ```bash
 make install-force

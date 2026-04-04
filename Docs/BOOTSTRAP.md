@@ -122,7 +122,9 @@ Install:
 ./bootstrap.sh --install
 ```
 
-This prompts for `sudo` to install the `newsyslog` config.
+This prompts for `sudo` to install the `newsyslog` config and then loads the
+launchd agents. Because the backup launchd template uses `RunAtLoad`, the
+backup job runs once immediately after install.
 
 Install with overwrites:
 

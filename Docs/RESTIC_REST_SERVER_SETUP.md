@@ -154,11 +154,20 @@ and only verifies access.
 make install
 ```
 
-## 8. Test the automation path
+This loads the launchd agents. The backup agent also runs once immediately
+when it is loaded.
+
+## 8. Watch the first automation-path run
+
+```bash
+tail -n 40 -f ~/Library/Logs/restic-rest-client/daemon_backup.log
+```
+
+If you want to rerun the backup after that initial load-triggered run has
+finished, use:
 
 ```bash
 launchctl kickstart -k gui/$UID/com.restic-rest-client.backup
-tail -n 40 -f ~/Library/Logs/restic-rest-client/daemon_backup.log
 ```
 
 ## 9. Decide whether the client should prune
