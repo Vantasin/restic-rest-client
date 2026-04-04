@@ -4,6 +4,14 @@
 and notification testing. The launchd jobs call it with an explicit
 subcommand.
 
+For interactive use, the Makefile exposes matching convenience targets such as
+`make backup`, `make prune`, `make logcleanup`, and the `make test-...`
+notification helpers.
+
+For stale lock recovery, use `make unlock-stale-locks` or
+`./unlock_stale_locks.sh`. That helper refuses to run while a `run_backup.sh`
+or `restic` process is active.
+
 ## Commands
 
 - `./run_backup.sh` or `./run_backup.sh backup`: run a backup.

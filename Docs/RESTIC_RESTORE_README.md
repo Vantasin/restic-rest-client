@@ -12,6 +12,26 @@ This document explains **how to safely restore data from a restic repository**, 
 > **Always restore into a temporary directory first.**  
 > Never restore directly over live data.
 
+## Quick Restore Command
+
+From the repo root, the convenience helper restores the latest snapshot into
+`~/restic-restore`:
+
+```bash
+make restore-latest
+```
+
+Direct script alternative:
+
+```bash
+./restore_latest.sh
+```
+
+The helper creates `~/restic-restore` when needed and refuses to use a
+non-empty target directory. Use the rest of this guide when you need a
+specific snapshot, a specific file or directory, or a different restore
+target.
+
 ---
 
 ## 📋 Prerequisites & Environment Setup

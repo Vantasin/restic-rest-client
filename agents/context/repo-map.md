@@ -19,6 +19,10 @@ external REST-server backend.
   Homebrew-managed dependencies, clone the repo, and start bootstrap/configure
 - `configure_env.sh`: populates required REST settings in `restic.env`
 - `init_repo.sh`: initializes the configured repository and verifies access
+- `restore_latest.sh`: convenience restore helper for the latest snapshot into
+  an empty local target directory
+- `unlock_stale_locks.sh`: safe stale-lock cleanup helper for manual
+  repository maintenance
 - `setup_password.sh`: manages the Keychain-backed REST server and repository
   password flow
 - `githooks/`: repo-managed Git hook checks for fast consistency validation
@@ -26,8 +30,9 @@ external REST-server backend.
 - `restic.env.example`: tracked environment template
 - `restic-include-macos.txt.example`: tracked backup root template
 - `restic-exclude-macos.txt.example`: tracked exclude template
-- `Makefile`: convenience wrapper for bootstrap/configure/password tasks and
-  repository init
+- `Makefile`: convenience wrapper for setup/install tasks, common
+  `run_backup.sh` modes, restore/stale-lock maintenance, and repo validation
+  helpers
 - `Docs/`: canonical human-readable component documentation
 
 ## Generated local state

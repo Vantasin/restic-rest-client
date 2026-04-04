@@ -36,6 +36,8 @@ check_shell() {
   local -a shell_files=(
     "setup.sh"
     "run_backup.sh"
+    "restore_latest.sh"
+    "unlock_stale_locks.sh"
     "configure_env.sh"
     "init_repo.sh"
     "lib/platform.sh"
@@ -49,6 +51,8 @@ check_shell() {
   local -a executable_files=(
     "setup.sh"
     "run_backup.sh"
+    "restore_latest.sh"
+    "unlock_stale_locks.sh"
     "configure_env.sh"
     "init_repo.sh"
     "bootstrap.sh"

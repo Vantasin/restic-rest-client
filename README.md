@@ -170,6 +170,10 @@ regenerate local files from templates and overwrite the installed
   settings in `restic.env`
 - [`init_repo.sh`](./init_repo.sh): initializes the configured repository and
   verifies access
+- [`restore_latest.sh`](./restore_latest.sh): convenience restore helper for
+  the latest snapshot into `~/restic-restore`
+- [`unlock_stale_locks.sh`](./unlock_stale_locks.sh): safe stale-lock cleanup
+  helper that refuses to run while restic is active
 - [`setup_password.sh`](./setup_password.sh): Keychain-backed REST server
   password storage plus repository-password setup and rotation
 - [`restic.env.example`](./restic.env.example): tracked env template
@@ -188,50 +192,47 @@ make verify
 Run a backup:
 
 ```bash
-./run_backup.sh
+make backup
 ```
 
 Run prune, only when the server allows client-side maintenance:
 
 ```bash
-./run_backup.sh prune
+make prune
 ```
 
 Run log cleanup:
 
 ```bash
-./run_backup.sh logcleanup
+make logcleanup
 ```
 
 Send test emails:
 
 ```bash
-./run_backup.sh test-email
-./run_backup.sh test-success-email
-./run_backup.sh test-failure-email
-./run_backup.sh test-warning-email
-./run_backup.sh test-lock-failure-email
+make test-email
+make test-success-email
+make test-failure-email
+make test-warning-email
+make test-lock-failure-email
 ```
 
 Unlock stale locks:
 
 ```bash
-source restic.env
-if pgrep -fl "run_backup.sh|restic" >/dev/null; then
-  echo "Active restic-related process found; not unlocking."
-  pgrep -fl "run_backup.sh|restic"
-else
-  restic list locks
-  restic unlock
-fi
+make unlock-stale-locks
 ```
 
-Restore into a temporary directory:
+> This helper refuses to run if a `run_backup.sh` or `restic` process is active.
+
+Restore the latest snapshot into `~/restic-restore`:
 
 ```bash
-source restic.env
-restic restore latest --target /tmp/restic-restore
+make restore-latest
 ```
+
+> Note: For restoring specific files, specific snapshots, or a different
+> target directory, see [Docs/RESTIC_RESTORE_README.md](./Docs/RESTIC_RESTORE_README.md).
 
 ## macOS Notes
 

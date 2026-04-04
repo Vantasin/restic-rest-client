@@ -1,6 +1,7 @@
 # Makefile Convenience Targets
 
-The Makefile is a thin wrapper around the repo's setup scripts and local Git
+The Makefile is a thin wrapper around the repo's setup scripts, the common
+`run_backup.sh` task modes, the stale-lock maintenance helper, and local Git
 hook configuration. It exists to provide easy-to-remember shortcuts, while the
 underlying scripts and Git config remain the source of truth.
 
@@ -78,6 +79,50 @@ it checks syntax, executable bits for runnable repo entrypoints, plist
 validity, whitespace issues, and directory README coverage across both the
 working tree and staged index without requiring a live restic repository,
 Keychain access, network access, or installed launchd state.
+
+```bash
+make backup
+```
+
+Run a backup immediately.
+
+```bash
+make prune
+```
+
+Run `forget --prune` when `RESTIC_PRUNE_ENABLED=true`.
+
+```bash
+make logcleanup
+```
+
+Delete old per-run logs according to `RESTIC_LOG_RETENTION_DAYS`.
+
+```bash
+make restore-latest
+```
+
+Restore the latest snapshot into `~/restic-restore`. The helper creates the
+target directory when needed and refuses to use a non-empty target so it does
+not restore over existing data. For specific snapshots, specific files, or a
+different target directory, use [Docs/RESTIC_RESTORE_README.md](./RESTIC_RESTORE_README.md).
+
+```bash
+make unlock-stale-locks
+```
+
+List repository locks, refuse to proceed if a `run_backup.sh` or `restic`
+process is active, run `restic unlock`, and then show the remaining locks.
+
+```bash
+make test-email
+make test-success-email
+make test-failure-email
+make test-warning-email
+make test-lock-failure-email
+```
+
+Run the matching notification test mode from `run_backup.sh`.
 
 ```bash
 make setup-rest-server-password

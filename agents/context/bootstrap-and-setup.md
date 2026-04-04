@@ -28,7 +28,9 @@ Canonical human docs:
   password generation/rotation. `--rest-server` and `--repository` are
   idempotent by default; `--rest-server --replace` and
   `--repository --rotate` are the explicit secret-changing paths.
-- `Makefile` wraps common install/setup tasks for convenience.
+- `Makefile` wraps common install/setup tasks, the direct
+  `run_backup.sh` operational modes, and the restore/stale-lock maintenance
+  helpers for convenience.
 
 ## Agent concerns
 

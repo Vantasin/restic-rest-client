@@ -172,16 +172,15 @@ build_lock_failure_note() {
 
   cat <<EOF
 Restic ${task_label} could not acquire the repository lock after waiting ${RESTIC_RETRY_LOCK}.
-Only run restic unlock when no restic process is active.
+Only run stale lock cleanup when no restic process is active.
 
-source restic.env
-if pgrep -fl "run_backup.sh|restic" >/dev/null; then
-  echo "Active restic-related process found; not unlocking."
-  pgrep -fl "run_backup.sh|restic"
-else
-  restic list locks
-  restic unlock
-fi
+From the repo root:
+  make unlock-stale-locks
+
+Direct script:
+  ./unlock_stale_locks.sh
+
+The helper refuses to run if a run_backup.sh or restic process is active.
 EOF
 }
 

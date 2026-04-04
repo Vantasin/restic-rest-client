@@ -1,4 +1,4 @@
-.PHONY: help bootstrap bootstrap-force configure init-repo install install-force uninstall install-hooks verify setup-rest-server-password setup-rest-server-password-replace setup-repository-password setup-repository-password-rotate setup-password setup-password-rotate
+.PHONY: help bootstrap bootstrap-force configure init-repo install install-force uninstall install-hooks verify backup prune logcleanup restore-latest unlock-stale-locks test-email test-success-email test-failure-email test-warning-email test-lock-failure-email setup-rest-server-password setup-rest-server-password-replace setup-repository-password setup-repository-password-rotate setup-password setup-password-rotate
 
 help:
 	@echo "Targets:"
@@ -11,6 +11,16 @@ help:
 	@echo "  make uninstall       Remove launchd + newsyslog and generated local config"
 	@echo "  make install-hooks   Configure this clone to use repo-managed git hooks"
 	@echo "  make verify          Run fast repo-wide consistency checks"
+	@echo "  make backup          Run a backup now"
+	@echo "  make prune           Run prune when client-side maintenance is enabled"
+	@echo "  make logcleanup      Delete old per-run logs"
+	@echo "  make restore-latest  Restore the latest snapshot into ~/restic-restore"
+	@echo "  make unlock-stale-locks Remove stale repository locks when no restic process is active"
+	@echo "  make test-email      Send a generic notification-path test email"
+	@echo "  make test-success-email Send a success-style test email"
+	@echo "  make test-failure-email Send a failure-style test email"
+	@echo "  make test-warning-email Send a warning-style test email"
+	@echo "  make test-lock-failure-email Send a repository-lock failure test email"
 	@echo "  make setup-rest-server-password      Ensure the REST server password is configured in Keychain"
 	@echo "  make setup-rest-server-password-replace Replace the existing REST server password in Keychain"
 	@echo "  make setup-repository-password       Ensure the restic repository password is configured in Keychain"
@@ -42,6 +52,36 @@ install-hooks:
 
 verify:
 	./verify_repo.sh
+
+backup:
+	./run_backup.sh
+
+prune:
+	./run_backup.sh prune
+
+logcleanup:
+	./run_backup.sh logcleanup
+
+restore-latest:
+	./restore_latest.sh
+
+unlock-stale-locks:
+	./unlock_stale_locks.sh
+
+test-email:
+	./run_backup.sh test-email
+
+test-success-email:
+	./run_backup.sh test-success-email
+
+test-failure-email:
+	./run_backup.sh test-failure-email
+
+test-warning-email:
+	./run_backup.sh test-warning-email
+
+test-lock-failure-email:
+	./run_backup.sh test-lock-failure-email
 
 setup-rest-server-password:
 	./setup_password.sh --rest-server

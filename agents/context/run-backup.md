@@ -24,6 +24,9 @@ Canonical human doc: `Docs/RUN_BACKUP_SCRIPT.md`
 
 - Changes here often require matching updates to `Docs/RUN_BACKUP_SCRIPT.md`
   and `Docs/RESTIC_ENV.md`.
+- Stale-lock operator guidance should stay aligned between
+  `lib/notifications.sh`, `Docs/RUN_BACKUP_SCRIPT.md`, and
+  `unlock_stale_locks.sh`.
 - Repository derivation changes belong to the env template/configure flow, not
   to `run_backup.sh`, unless runtime repository resolution itself changes.
 - Backup and prune changes can alter operational safety, lock behavior, or job
