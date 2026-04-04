@@ -19,11 +19,15 @@ Canonical human docs:
 - `bootstrap.sh` also manages whether the prune launch agent is present based
   on `RESTIC_PRUNE_ENABLED`.
 - `configure_env.sh` prompts for REST base URL and username and keeps local
-  repo-name/host defaults unless explicitly overridden. It also writes the
-  derived `RESTIC_REPOSITORY` value from the base URL plus repository name.
+  repo-name/host defaults unless explicitly overridden. The prompt separates
+  examples from current saved values and explicitly tells the user when Enter
+  keeps the current value. It also writes the derived `RESTIC_REPOSITORY`
+  value from the base URL plus repository name.
 - `init_repo.sh` initializes the configured repository and verifies access.
 - `setup_password.sh` manages REST server password storage plus repository
-  password generation/rotation.
+  password generation/rotation. `--rest-server` and `--repository` are
+  idempotent by default; `--rest-server --replace` and
+  `--repository --rotate` are the explicit secret-changing paths.
 - `Makefile` wraps common install/setup tasks for convenience.
 
 ## Agent concerns

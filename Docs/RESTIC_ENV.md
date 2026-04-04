@@ -57,7 +57,9 @@ Notes:
   `RESTIC_REPOSITORY_BASE_URL="https://restic.example.com/user"` rather than
   only `https://restic.example.com`
 - `make configure` prompts for `RESTIC_REPOSITORY_BASE_URL` and
-  `RESTIC_REST_USERNAME`, then keeps or writes local defaults for
+  `RESTIC_REST_USERNAME`, shows a separate example for each variable, shows
+  the current saved value when one exists, and explicitly says when pressing
+  Enter will keep that value. It then keeps or writes local defaults for
   `RESTIC_REPOSITORY_NAME` and `RESTIC_HOST`
 - `RESTIC_REPOSITORY_NAME` is the client-side repo path segment created under
   that base URL
@@ -68,8 +70,13 @@ Notes:
 - restic's REST backend consumes `RESTIC_REST_USERNAME` and
   `RESTIC_REST_PASSWORD`, so the default template loads the server password
   from Keychain when `restic.env` is sourced
+- rerunning `./setup_password.sh --rest-server` or
+  `make setup-rest-server-password` is safe; if the Keychain entry already
+  exists, the command leaves the stored secret unchanged and only repairs the
+  `RESTIC_REST_PASSWORD` line in `restic.env` if needed
 - after the server admin changes the password with `create_user` again, rerun
-  `./setup_password.sh --rest-server` or `make setup-rest-server-password`
+  `./setup_password.sh --rest-server --replace` or
+  `make setup-rest-server-password-replace`
 
 Manual fallback, if you intentionally keep the server password in local env
 state:
@@ -101,6 +108,11 @@ Those commands manage a Keychain entry and write:
 ```bash
 export RESTIC_PASSWORD_COMMAND="security find-generic-password -a restic-rest-client-repository -s restic-rest-client-repository -w"
 ```
+
+Running `./setup_password.sh --repository` or
+`make setup-repository-password` again is safe: if the Keychain entry already
+exists, the command leaves the stored secret unchanged and only repairs the
+`RESTIC_PASSWORD_COMMAND` line in `restic.env` if needed.
 
 After the server password is stored and the repository password is generated,
 run:

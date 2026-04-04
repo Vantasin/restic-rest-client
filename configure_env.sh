@@ -78,24 +78,31 @@ set_export_line() {
 }
 
 prompt_value() {
-  local prompt_text="$1"
-  local default_value="${2:-}"
+  local variable_name="$1"
+  local example_value="$2"
+  local current_value="${3:-}"
   local answer=""
 
   if [[ ! -t 0 ]]; then
-    if [[ -n "$default_value" ]]; then
-      printf '%s' "$default_value"
+    if [[ -n "$current_value" ]]; then
+      printf '%s' "$current_value"
       return 0
     fi
-    echo "ERROR: missing required value for $prompt_text." >&2
+    echo "ERROR: missing required value for $variable_name." >&2
     exit 1
   fi
 
-  if [[ -n "$default_value" ]]; then
-    read -r "answer?$prompt_text [$default_value]: "
-    printf '%s' "${answer:-$default_value}"
+  print -u2 -- "$variable_name"
+  print -u2 -- "  Example: $example_value"
+
+  if [[ -n "$current_value" ]]; then
+    print -u2 -- "  Current: $current_value"
+    print -u2 -- "  Press Enter to keep the current value, or type a new value."
+    read -r "answer?  Value: "
+    printf '%s' "${answer:-$current_value}"
   else
-    read -r "answer?$prompt_text: "
+    print -u2 -- "  No current value is set. Enter a value."
+    read -r "answer?  Value: "
     printf '%s' "$answer"
   fi
 }
@@ -267,8 +274,8 @@ fi
 [[ -n "$requested_repository_name" ]] && repository_name="$requested_repository_name"
 [[ -n "$requested_restic_host" ]] && restic_host="$requested_restic_host"
 
-repository_base_url="$(prompt_value "RESTIC_REPOSITORY_BASE_URL (example: https://restic.example.com/user)" "$repository_base_url")"
-rest_username="$(prompt_value "RESTIC_REST_USERNAME (example: user)" "$rest_username")"
+repository_base_url="$(prompt_value "RESTIC_REPOSITORY_BASE_URL" "https://restic.example.com/user" "$repository_base_url")"
+rest_username="$(prompt_value "RESTIC_REST_USERNAME" "user" "$rest_username")"
 
 repository_base_url="$(normalize_base_url "$repository_base_url")"
 rest_username="$(normalize_required_text "RESTIC_REST_USERNAME" "$rest_username")"

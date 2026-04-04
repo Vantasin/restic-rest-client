@@ -259,6 +259,10 @@ run_repo_setup() {
   say "  ./setup_password.sh --repository"
   say "  ./init_repo.sh"
   say "  ./bootstrap.sh --install"
+  say ""
+  say "Repeated password setup is safe:"
+  say "  --rest-server and --repository reuse existing Keychain entries"
+  say "  use --rest-server --replace or --repository --rotate for intentional changes"
 }
 
 if [[ "$(uname -s)" != "Darwin" ]]; then

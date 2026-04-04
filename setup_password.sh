@@ -5,6 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ENV_FILE="$SCRIPT_DIR/restic.env"
 mode="repository"
 rotate=false
+replace=false
 
 source "$SCRIPT_DIR/lib/platform.sh"
 
@@ -14,7 +15,7 @@ password_length=32
 
 usage() {
   cat <<'EOF'
-Usage: ./setup_password.sh --rest-server [--account NAME] [--service NAME]
+Usage: ./setup_password.sh --rest-server [--account NAME] [--service NAME] [--replace]
        ./setup_password.sh --repository [--account NAME] [--service NAME] [--length N] [--rotate]
 
 Store the REST server password in macOS Keychain or generate/store the restic
@@ -24,6 +25,10 @@ Defaults:
 - --rest-server account/service: restic-rest-client-rest-server
 - --repository account/service:  restic-rest-client-repository
 - --repository length:           32 bytes (hex output)
+
+Behavior:
+- --rest-server skips existing Keychain entries unless --replace is passed
+- --repository skips existing Keychain entries unless --rotate is passed
 EOF
 }
 
@@ -65,6 +70,9 @@ while [[ $# -gt 0 ]]; do
     --rotate)
       rotate=true
       ;;
+    --replace)
+      replace=true
+      ;;
     -h|--help)
       usage
       exit 0
@@ -100,8 +108,8 @@ case "$mode" in
   repository)
     keychain_account="${keychain_account:-restic-rest-client-repository}"
     keychain_service="${keychain_service:-restic-rest-client-repository}"
-    if ! command -v openssl >/dev/null 2>&1; then
-      echo "ERROR: 'openssl' not found. Install it (Homebrew) or set a password manually."
+    if [[ "${replace:-false}" == "true" ]]; then
+      echo "ERROR: --replace applies only to --rest-server."
       exit 1
     fi
     ;;
@@ -117,6 +125,10 @@ build_keychain_fetch_command() {
   account_escaped="$(printf '%q' "$1")"
   service_escaped="$(printf '%q' "$2")"
   printf 'security find-generic-password -a %s -s %s -w' "$account_escaped" "$service_escaped"
+}
+
+keychain_entry_exists() {
+  security find-generic-password -a "$1" -s "$2" -w >/dev/null 2>&1
 }
 
 set_export_line() {
@@ -149,6 +161,20 @@ configure_rest_server_password() {
   local command_line provided_password
 
   command_line="$(build_keychain_fetch_command "$keychain_account" "$keychain_service")"
+
+  if keychain_entry_exists "$keychain_account" "$keychain_service" && [[ "${replace:-false}" != "true" ]]; then
+    set_export_line "RESTIC_REST_PASSWORD" "\"\$($command_line)\""
+
+    if ! grep -q "^export RESTIC_REST_PASSWORD=" "$ENV_FILE"; then
+      echo "ERROR: failed to update $ENV_FILE."
+      exit 1
+    fi
+
+    echo "Keychain entry already exists for REST server password under account '$keychain_account' (service '$keychain_service'); leaving it unchanged."
+    echo "Updated: $ENV_FILE"
+    echo "Use --replace to store a different REST server password."
+    return 0
+  fi
 
   read -r -s "provided_password?Enter the REST server password to store in Keychain: "
   echo
@@ -216,9 +242,22 @@ configure_repository_password() {
       exit 1
     fi
   else
-    if security find-generic-password -a "$keychain_account" -s "$keychain_service" -w >/dev/null 2>&1; then
-      echo "ERROR: Keychain entry already exists for account '$keychain_account' and service '$keychain_service'."
+    if keychain_entry_exists "$keychain_account" "$keychain_service"; then
+      set_export_line "RESTIC_PASSWORD_COMMAND" "\"$command_line\""
+
+      if ! grep -q "^export RESTIC_PASSWORD_COMMAND=" "$ENV_FILE"; then
+        echo "ERROR: failed to update $ENV_FILE."
+        exit 1
+      fi
+
+      echo "Keychain entry already exists for repository password under account '$keychain_account' (service '$keychain_service'); leaving it unchanged."
+      echo "Updated: $ENV_FILE"
       echo "Use --rotate to rotate it."
+      return 0
+    fi
+
+    if ! command -v openssl >/dev/null 2>&1; then
+      echo "ERROR: 'openssl' not found. Install it (Homebrew) or set a password manually."
       exit 1
     fi
   fi

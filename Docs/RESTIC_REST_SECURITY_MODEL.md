@@ -92,7 +92,8 @@ Compromised server:
 
 - do not commit `restic.env`
 - keep it mode `600`
-- rerun `setup_password.sh --rest-server` after a server password change
+- replace the REST server Keychain entry with
+  `setup_password.sh --rest-server --replace` after a server password change
 - rotate the restic repository password with
   `setup_password.sh --repository --rotate`
 - rotate the REST server password on the server side with `create_user` again

@@ -51,6 +51,9 @@ RESTIC_REPOSITORY_BASE_URL=https://restic.example.com/user
 RESTIC_REST_USERNAME=user
 ```
 
+The configure prompt shows those as examples separately from any saved current
+values, and it tells you when pressing Enter will keep the current value.
+
 Do not enter only the server root such as
 `https://restic.example.com` unless the server admin explicitly tells
 you that the per-user base path is the root.
@@ -70,7 +73,15 @@ make setup-repository-password
 ```
 
 The first command stores the admin-provided REST server password and updates
-`RESTIC_REST_PASSWORD` in `restic.env`. The second generates the restic repository password, stores it in Keychain, and updates `RESTIC_PASSWORD_COMMAND`.
+`RESTIC_REST_PASSWORD` in `restic.env`. The second generates the restic
+repository password, stores it in Keychain, and updates
+`RESTIC_PASSWORD_COMMAND`.
+
+Both commands are safe to rerun. If the matching Keychain entry already
+exists, they leave the secret unchanged and only repair the `restic.env`
+lookup line if needed. To change an existing password intentionally, use
+`make setup-rest-server-password-replace` for the REST password or
+`make setup-repository-password-rotate` for the repository password.
 
 ### 4. Initialize the repository and verify access
 

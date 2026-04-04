@@ -106,8 +106,10 @@ The configure step prompts for:
 - `RESTIC_REPOSITORY_BASE_URL` using the admin-provided HTTPS base URL
 - `RESTIC_REST_USERNAME`
 
-The script also shows a concrete example for each prompt so users can match the
-expected input format without switching back to the docs.
+The script shows a separate concrete example for each prompt, shows the
+existing value when one is already set, and explicitly says when pressing
+Enter will keep that current value. That lets users rerun configure without
+guessing whether the shown value is an example or saved state.
 
 Using the concrete example above, `make configure` should receive:
 
@@ -147,6 +149,12 @@ Generate the repository password:
 ```bash
 make setup-repository-password
 ```
+
+Those commands are safe to rerun during an idempotent setup pass. They skip
+cleanly if the matching Keychain entry already exists. Use
+`make setup-rest-server-password-replace` after the server admin changes the
+REST password, and `make setup-repository-password-rotate` only when you
+intend to rotate the repository encryption password.
 
 ## 6. Initialize the repository
 

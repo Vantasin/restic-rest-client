@@ -83,15 +83,24 @@ Keychain access, network access, or installed launchd state.
 make setup-rest-server-password
 ```
 
-Prompt for the admin-provided REST server password, store it in Keychain, and
-update `RESTIC_REST_PASSWORD` in `restic.env`.
+Ensure the REST server password is configured in Keychain and update
+`RESTIC_REST_PASSWORD` in `restic.env`. If the Keychain entry already exists,
+the command skips cleanly and leaves the stored secret unchanged.
+
+```bash
+make setup-rest-server-password-replace
+```
+
+Prompt for the admin-provided REST server password and replace the existing
+Keychain entry.
 
 ```bash
 make setup-repository-password
 ```
 
-Generate and store the restic repository password in Keychain and update
-`RESTIC_PASSWORD_COMMAND` in `restic.env`.
+Ensure the restic repository password is configured in Keychain and update
+`RESTIC_PASSWORD_COMMAND` in `restic.env`. If the Keychain entry already
+exists, the command skips cleanly and leaves the stored secret unchanged.
 
 ```bash
 make setup-repository-password-rotate

@@ -117,6 +117,11 @@ bootstrap/configure handoff for you, run `setup.sh` first.
 6. Run `make init-repo` for first-time repository creation and verification.
 7. Run `make install` when you are ready to install launchd and `newsyslog`.
 
+The password commands are safe to rerun during setup. They skip cleanly if the
+matching Keychain entry already exists. Use
+`make setup-rest-server-password-replace` to replace the REST password and
+`make setup-repository-password-rotate` to rotate the repository password.
+
 ## Safety
 
 - `restic.env` is created with placeholder REST settings and Keychain lookup
@@ -145,8 +150,10 @@ Populate the required REST settings in `restic.env`:
 ```
 
 By default, this prompts only for the REST base URL and username, shows a
-concrete example for each input, and keeps the generated repo-name and host
-defaults.
+separate concrete example for each variable, shows the current value when one
+already exists, and tells you when pressing Enter will keep that current
+value. It keeps the generated repo-name and host defaults unless you override
+them.
 
 Makefile equivalent:
 

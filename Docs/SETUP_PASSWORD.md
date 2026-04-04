@@ -29,17 +29,30 @@ make setup-rest-server-password
 
 This flow:
 
-- prompts for the admin-provided password without echoing it
-- stores or updates the Keychain entry
+- stores the admin-provided password in Keychain when the entry does not exist
+- skips cleanly when the Keychain entry already exists
 - updates `RESTIC_REST_PASSWORD` in `restic.env`
+
+That makes `./setup_password.sh --rest-server` and
+`make setup-rest-server-password` safe to rerun during a repeat setup pass.
 
 Default Keychain names:
 
 - account: `restic-rest-client-rest-server`
 - service: `restic-rest-client-rest-server`
 
-Rerun the same command after the server admin changes the password with
-`create_user` again.
+If the server admin changes the password, replace the existing Keychain entry
+explicitly:
+
+```bash
+./setup_password.sh --rest-server --replace
+```
+
+Makefile alternative:
+
+```bash
+make setup-rest-server-password-replace
+```
 
 ## Repository Password
 
@@ -64,6 +77,11 @@ This flow:
 - stores it in Keychain under an account/service name
 - updates `RESTIC_PASSWORD_COMMAND` in `restic.env`
 - verifies the Keychain entry and the `restic.env` update
+
+If the Keychain entry already exists, the command skips cleanly and only
+repairs the `RESTIC_PASSWORD_COMMAND` line in `restic.env` if needed. That
+makes `./setup_password.sh --repository` and
+`make setup-repository-password` safe to rerun.
 
 Default Keychain names:
 

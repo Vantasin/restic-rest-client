@@ -1,4 +1,4 @@
-.PHONY: help bootstrap bootstrap-force configure init-repo install install-force uninstall install-hooks verify setup-rest-server-password setup-repository-password setup-repository-password-rotate setup-password setup-password-rotate
+.PHONY: help bootstrap bootstrap-force configure init-repo install install-force uninstall install-hooks verify setup-rest-server-password setup-rest-server-password-replace setup-repository-password setup-repository-password-rotate setup-password setup-password-rotate
 
 help:
 	@echo "Targets:"
@@ -11,8 +11,9 @@ help:
 	@echo "  make uninstall       Remove launchd + newsyslog and generated local config"
 	@echo "  make install-hooks   Configure this clone to use repo-managed git hooks"
 	@echo "  make verify          Run fast repo-wide consistency checks"
-	@echo "  make setup-rest-server-password      Store the admin-provided REST server password in Keychain"
-	@echo "  make setup-repository-password       Generate and store the restic repository password in Keychain"
+	@echo "  make setup-rest-server-password      Ensure the REST server password is configured in Keychain"
+	@echo "  make setup-rest-server-password-replace Replace the existing REST server password in Keychain"
+	@echo "  make setup-repository-password       Ensure the restic repository password is configured in Keychain"
 	@echo "  make setup-repository-password-rotate Rotate the existing restic repository password"
 
 bootstrap:
@@ -44,6 +45,9 @@ verify:
 
 setup-rest-server-password:
 	./setup_password.sh --rest-server
+
+setup-rest-server-password-replace:
+	./setup_password.sh --rest-server --replace
 
 setup-repository-password:
 	./setup_password.sh --repository
