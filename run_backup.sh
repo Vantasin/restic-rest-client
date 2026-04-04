@@ -79,20 +79,20 @@ load_repository_context() {
   local repo_value_or_error
 
   if ! repo_value_or_error="$(resolve_repository_value 2>&1)"; then
+    REPO_CONTEXT_ERROR="$repo_value_or_error"
     return 1
   fi
 
   RESTIC_REPO_DISPLAY_VALUE="$(mask_repository_credentials "$repo_value_or_error")"
   RESTIC_REPO_SOURCE="env: RESTIC_REPOSITORY"
+  REPO_CONTEXT_ERROR=""
 
   return 0
 }
 
 require_repository_context_or_exit() {
-  local repo_error
-
-  if ! repo_error="$(load_repository_context 2>&1)"; then
-    echo "ERROR: $repo_error" >&2
+  if ! load_repository_context; then
+    echo "ERROR: ${REPO_CONTEXT_ERROR:-Set RESTIC_REPOSITORY in restic.env.}" >&2
     exit 1
   fi
 }

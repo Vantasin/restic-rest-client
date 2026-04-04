@@ -13,7 +13,7 @@ Default: all
 Checks:
 - diff:     git diff --check (working tree)
 - diff-cached: git diff --cached --check (index)
-- shell:    zsh syntax checks for repo shell scripts and hooks
+- shell:    zsh syntax checks plus executable-bit checks for runnable repo shell entrypoints and hooks
 - plists:   plutil validation for tracked launchd plist templates
 - readmes:  ensure each visible repo directory has a README.md
 EOF
@@ -45,6 +45,23 @@ check_shell() {
     "verify_repo.sh"
     "githooks/pre-commit"
   )
+  local -a executable_files=(
+    "run_backup.sh"
+    "configure_env.sh"
+    "init_repo.sh"
+    "bootstrap.sh"
+    "setup_password.sh"
+    "verify_repo.sh"
+    "githooks/pre-commit"
+  )
+
+  for file in $executable_files; do
+    [[ -f "$file" ]] || continue
+    if [[ ! -x "$file" ]]; then
+      echo "ERROR: expected executable bit on $file" >&2
+      return 1
+    fi
+  done
 
   for file in $shell_files; do
     [[ -f "$file" ]] || continue

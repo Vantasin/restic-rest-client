@@ -70,10 +70,10 @@ make verify
 ```
 
 Run fast repo-wide consistency checks. This is intended to be safe and local:
-it checks syntax, plist validity, whitespace issues, and directory README
-coverage across both the working tree and staged index without requiring a live
-restic repository, Keychain access, network access, or installed launchd
-state.
+it checks syntax, executable bits for runnable repo entrypoints, plist
+validity, whitespace issues, and directory README coverage across both the
+working tree and staged index without requiring a live restic repository,
+Keychain access, network access, or installed launchd state.
 
 ```bash
 make setup-rest-server-password
