@@ -171,12 +171,6 @@ Run fast verification:
 make verify
 ```
 
-Install the optional repo-managed Git hook:
-
-```bash
-make install-hooks
-```
-
 Run a backup:
 
 ```bash
