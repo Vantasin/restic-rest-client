@@ -33,11 +33,29 @@ The server admin should provide:
 - the REST username
 - the REST password
 
+Example:
+
+```text
+RESTIC_REPOSITORY_BASE_URL=https://restic.example.com/user
+RESTIC_REST_USERNAME=user
+```
+
+Do not enter only the server root such as
+`https://restic.example.com` unless the server admin explicitly tells
+you that the per-user base path is the root.
+
 `make configure` prompts only for the base URL and username. It keeps the
 local defaults for `RESTIC_REPOSITORY_NAME` and `RESTIC_HOST`, and
 `restic.env` derives the final `RESTIC_REPOSITORY` from those values. Edit
 `restic.env` afterward only if you want to change optional settings such as
 repo name, host label, prune mode, retention, notifications, or power guards.
+
+With the example above and the default repo name, the derived repository URL
+would look like:
+
+```text
+rest:https://restic.example.com/user/my-macbook
+```
 
 ### 3. Store passwords in Keychain
 

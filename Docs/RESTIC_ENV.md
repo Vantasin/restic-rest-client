@@ -42,10 +42,10 @@ host, so old labels will no longer be pruned automatically.
 Recommended default:
 
 ```bash
-export RESTIC_REPOSITORY_BASE_URL="https://backup.example.com/backup"
+export RESTIC_REPOSITORY_BASE_URL="https://restic.example.com/user"
 export RESTIC_REPOSITORY_NAME="my-macbook"
 export RESTIC_REPOSITORY="rest:${RESTIC_REPOSITORY_BASE_URL%/}/${RESTIC_REPOSITORY_NAME}"
-export RESTIC_REST_USERNAME="backup"
+export RESTIC_REST_USERNAME="user"
 export RESTIC_REST_PASSWORD="$(security find-generic-password -a restic-rest-client-rest-server -s restic-rest-client-rest-server -w)"
 ```
 
@@ -53,6 +53,9 @@ Notes:
 
 - the server admin should provide the base per-user HTTPS repository URL plus
   the REST username/password
+- example: if the server user is `user`, use
+  `RESTIC_REPOSITORY_BASE_URL="https://restic.example.com/user"` rather than
+  only `https://restic.example.com`
 - `make configure` prompts for `RESTIC_REPOSITORY_BASE_URL` and
   `RESTIC_REST_USERNAME`, then keeps or writes local defaults for
   `RESTIC_REPOSITORY_NAME` and `RESTIC_HOST`

@@ -10,10 +10,10 @@ matching Keychain entries.
 
 ## REST Server Password
 
-Use this when the server admin gives you the REST username/password for the
-repository URL. Run `make configure` first so `restic.env` already has the
-base URL and username populated and local defaults selected for the repository
-name and host label.
+Use this when the server admin gives you the base per-user REST URL plus the
+REST username/password. Run `make configure` first so `restic.env` already has
+the base URL and username populated and local defaults selected for the
+repository name and host label.
 
 From the repo root:
 

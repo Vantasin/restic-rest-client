@@ -31,3 +31,7 @@ Update `agents/` when a change touches:
 - Link to the canonical human doc instead of restating it.
 - Keep agent docs concise and operational.
 - Prefer one clear owner document per topic to reduce drift.
+- In tracked docs for this public repo, keep examples sanitized. Use placeholder
+  or reserved-example values such as `example.com`, `backup`, and
+  `you@example.com` rather than operator-specific domains, usernames, email
+  addresses, or hostnames.

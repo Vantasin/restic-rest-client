@@ -56,15 +56,26 @@ For the default `--private-repos` model, the client repository path must start
 with the username. The server admin should give the client:
 
 - the base per-user HTTPS repository URL without inline credentials, for
-  example `https://backup.example.com/backup`
-- the REST username, for example `backup`
+  example `https://restic.example.com/user`
+- the REST username, for example `user`
 - the REST password that was set during `create_user`
+
+Concrete example:
+
+```text
+RESTIC_REPOSITORY_BASE_URL=https://restic.example.com/user
+RESTIC_REST_USERNAME=user
+```
+
+Do not use only the server root such as
+`https://restic.example.com` unless the server admin explicitly says
+that is already the per-user base path.
 
 The client then chooses a repository name under that base URL. For example, if
 the client chooses `laptop`, the corresponding restic repository URL will be:
 
 ```text
-rest:https://backup.example.com/backup/laptop
+rest:https://restic.example.com/user/laptop
 ```
 
 The restic repository password is separate and should be generated or supplied
@@ -83,6 +94,20 @@ The configure step prompts for:
 
 - `RESTIC_REPOSITORY_BASE_URL` using the admin-provided HTTPS base URL
 - `RESTIC_REST_USERNAME`
+
+Using the concrete example above, `make configure` should receive:
+
+```text
+RESTIC_REPOSITORY_BASE_URL=https://restic.example.com/user
+RESTIC_REST_USERNAME=user
+```
+
+If the generated repo name is `my-macbook`, the derived repository URL will
+be:
+
+```text
+rest:https://restic.example.com/user/my-macbook
+```
 
 It keeps the generated local defaults for:
 
