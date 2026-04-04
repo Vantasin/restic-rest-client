@@ -9,6 +9,33 @@ aligned to the companion `restic-rest-server` deployment model: HTTPS,
 Companion server repo:
 <https://github.com/Vantasin/restic-rest-server.git>
 
+## Prerequisites
+
+- macOS
+- `git` if you are cloning or updating the repo from the command line
+- `restic` for repository init, backup, restore, and prune operations
+- `make` for the documented shortcut commands
+
+Homebrew is the recommended install method for repo-managed dependencies, but it is not a hard requirement if you already have the tools available another way.
+
+```bash
+brew install git restic
+```
+
+Flow-specific tools:
+
+- `openssl` for `make setup-repository-password`
+- `msmtp` only if you want email notifications
+- macOS-provided tools such as `launchctl`, `newsyslog`, `security`, and
+  `sudo` for `make install` and Keychain-backed password flows
+
+Optional Homebrew installs:
+
+```bash
+brew install openssl@3
+brew install msmtp
+```
+
 ## Quick Start
 
 ### 1. Clone the repo
