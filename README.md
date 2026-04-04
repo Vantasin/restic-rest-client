@@ -9,15 +9,6 @@ aligned to the companion `restic-rest-server` deployment model: HTTPS,
 Companion server repo:
 <https://github.com/Vantasin/restic-rest-server.git>
 
-## Summary
-
-- macOS client automation for an external `restic/rest-server` deployment
-- curl-friendly setup flow that can install missing dependencies, clone the
-  repo, and start the initial config handoff
-- Keychain-backed REST server and repository password workflows
-- launchd scheduling and `newsyslog` rotation for the local automation
-- defaults aligned to HTTPS, `--private-repos`, and append-only server mode
-
 ## Quick Start
 
 ### 1. Run the canonical setup flow
