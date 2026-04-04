@@ -38,6 +38,11 @@ die() {
   exit 1
 }
 
+cancel() {
+  print -- "Cancelled: $*"
+  exit 1
+}
+
 prompt_yes_no() {
   local prompt="$1"
   local default_answer="$2"
@@ -169,7 +174,7 @@ ensure_dependency_prerequisites() {
     if (( ${#MISSING_REQUIRED_FORMULAE[@]} > 0 )); then
       say "Missing required dependencies: ${(j:, :)MISSING_REQUIRED_FORMULAE}"
       prompt_yes_no "Install Homebrew so the setup script can install the missing required dependencies?" "yes" || \
-        die "Missing required dependencies remain: ${(j:, :)MISSING_REQUIRED_FORMULAE}"
+        cancel "missing required dependencies remain: ${(j:, :)MISSING_REQUIRED_FORMULAE}"
       install_homebrew
       brew_ready=true
     elif (( ${#MISSING_OPTIONAL_FORMULAE[@]} > 0 )); then
@@ -188,7 +193,7 @@ ensure_dependency_prerequisites() {
   if (( ${#MISSING_REQUIRED_FORMULAE[@]} > 0 )); then
     say "Missing required dependencies: ${(j:, :)MISSING_REQUIRED_FORMULAE}"
     prompt_yes_no "Install the missing required dependencies via Homebrew?" "yes" || \
-      die "Required dependencies remain missing: ${(j:, :)MISSING_REQUIRED_FORMULAE}"
+      cancel "required dependencies remain missing: ${(j:, :)MISSING_REQUIRED_FORMULAE}"
     brew install "${MISSING_REQUIRED_FORMULAE[@]}" || die "Failed to install required dependencies."
     collect_missing_dependencies
     (( ${#MISSING_REQUIRED_FORMULAE[@]} == 0 )) || \
@@ -219,7 +224,7 @@ ensure_repo_checkout() {
   if [[ -d "$CLONE_DIR/.git" ]]; then
     say "Found an existing repo checkout at $CLONE_DIR."
     prompt_yes_no "Reuse the existing checkout and continue with bootstrap/configure?" "yes" || \
-      die "Aborted because the existing checkout was not approved for reuse."
+      cancel "existing checkout was not reused. Rerun with --clone-dir to use a different location."
     return 0
   fi
 

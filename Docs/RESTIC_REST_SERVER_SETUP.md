@@ -100,6 +100,9 @@ curl -fsSL https://raw.githubusercontent.com/Vantasin/restic-rest-client/main/se
 
 That setup helper can install missing required dependencies such as `git`,
 `make`, `openssl`, and `restic`, and can optionally install `msmtp`.
+If the default clone path already contains a checkout, it asks whether to
+reuse it and cancels cleanly if you decline, so you can rerun with a different
+`--clone-dir`.
 
 The configure step prompts for:
 

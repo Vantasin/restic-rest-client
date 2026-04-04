@@ -35,6 +35,9 @@ curl -fsSL https://raw.githubusercontent.com/Vantasin/restic-rest-client/main/se
 
 The remaining commands below assume the default clone path. If you used
 `--clone-dir`, replace `$HOME/Git/restic-rest-client` with your chosen path.
+If the default clone path already contains a checkout, the setup script asks
+whether to reuse it. Choosing `no` cancels cleanly so you can rerun with a
+different `--clone-dir`.
 
 ### 2. Enter the server details when prompted
 

@@ -35,6 +35,10 @@ curl -fsSL https://raw.githubusercontent.com/Vantasin/restic-rest-client/main/se
   zsh -s -- --clone-dir "$HOME/Projects/restic-rest-client"
 ```
 
+If the default clone path already contains a checkout, `setup.sh` asks whether
+to reuse it. Choosing `no` cancels the setup cleanly so you can rerun with a
+different `--clone-dir`.
+
 ## Modes
 
 - `--generate`: write local gitignored files only
