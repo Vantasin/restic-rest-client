@@ -43,7 +43,9 @@ The script prints a short action log:
 - `REMOVED:` when uninstall deletes a file
 
 Install and uninstall are fail-hard: if verification fails, the script exits
-non-zero.
+non-zero. `--install` validates `newsyslog` before loading the managed launchd
+agents, and if a later install step fails it rolls the managed launchd and
+`newsyslog` state back.
 
 ## Prune Install Behavior
 
@@ -122,9 +124,11 @@ Install:
 ./bootstrap.sh --install
 ```
 
-This prompts for `sudo` to install the `newsyslog` config and then loads the
-launchd agents. Because the backup launchd template uses `RunAtLoad`, the
-backup job runs once immediately after install.
+This validates the `newsyslog` config first. If validation succeeds, install
+updates the managed `newsyslog` and launchd state as one transaction and rolls
+those managed assets back if a later install step fails. Because the backup
+launchd template uses `RunAtLoad`, the backup job runs once immediately after a
+successful install.
 
 Install with overwrites:
 

@@ -14,7 +14,8 @@ from them.
 ## High-sensitivity files
 
 - `restic.env.example`: default env contract for the per-user base URL,
-  repository name, REST username, and Keychain-backed password lookups
+  repository name, derived `RESTIC_REPOSITORY`, REST username, and
+  Keychain-backed password lookups
 - `restic-include-macos.txt.example`: top-level backup roots
 - `restic-exclude-macos.txt.example`: exclusions and backup-scope trimming
 - `launchd/*.plist.example`: schedule/path defaults for generated agents

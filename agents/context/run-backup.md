@@ -6,8 +6,6 @@ Canonical human doc: `Docs/RUN_BACKUP_SCRIPT.md`
 
 - Load environment and local config
 - Resolve the repository location from `RESTIC_REPOSITORY`
-- Support default derived repository values based on
-  `RESTIC_REPOSITORY_BASE_URL` and `RESTIC_REPOSITORY_NAME`
 - Use `RESTIC_REST_*` environment variables for REST-server auth when present
 - Run `backup`, `prune`, `logcleanup`, or notification test tasks
 - Source `lib/platform.sh` for shared truthy parsing, macOS power/clamshell
@@ -26,6 +24,8 @@ Canonical human doc: `Docs/RUN_BACKUP_SCRIPT.md`
 
 - Changes here often require matching updates to `Docs/RUN_BACKUP_SCRIPT.md`
   and `Docs/RESTIC_ENV.md`.
+- Repository derivation changes belong to the env template/configure flow, not
+  to `run_backup.sh`, unless runtime repository resolution itself changes.
 - Backup and prune changes can alter operational safety, lock behavior, or job
   timing; treat them as high-impact.
 - Exit-code handling matters because operators use logs and notifications to

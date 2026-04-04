@@ -35,7 +35,8 @@ be installed into `~/Library/LaunchAgents/`.
   until you regenerate and reload them locally.
 - Backup and logcleanup are always installed. The prune plist is installed only
   when `RESTIC_PRUNE_ENABLED=true`.
-- The backup plist uses `RunAtLoad`, so loading the installed agent starts one
-  immediate backup run before the regular interval schedule takes over.
+- The backup plist uses `RunAtLoad`, so a successful load of the installed
+  backup agent starts one immediate backup run before the regular interval
+  schedule takes over.
 - Schedule changes are operationally significant and should be reflected in the
   human docs.

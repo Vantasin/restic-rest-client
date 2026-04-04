@@ -181,7 +181,8 @@ configure_rest_server_password() {
 }
 
 configure_repository_password() {
-  local password command_line tmp_pass
+  local password command_line tmp_current_pass tmp_new_pass
+  local rotation_completed=false
 
   if [[ "${rotate:-false}" == "true" ]]; then
     if ! command -v restic >/dev/null 2>&1; then
@@ -241,26 +242,55 @@ configure_repository_password() {
       exit 1
     fi
 
-    tmp_pass="$(mktemp)"
-    chmod 600 "$tmp_pass"
-    printf "%s" "$password" > "$tmp_pass"
+    tmp_current_pass="$(mktemp)"
+    tmp_new_pass="$(mktemp)"
+    chmod 600 "$tmp_current_pass" "$tmp_new_pass"
 
-    if ! RESTIC_PASSWORD_COMMAND="$command_line" restic key passwd --new-password-file "$tmp_pass"; then
-      rm -f "$tmp_pass"
+    if ! security find-generic-password -a "$keychain_account" -s "$keychain_service" -w > "$tmp_current_pass"; then
+      rm -f "$tmp_current_pass" "$tmp_new_pass"
+      echo "ERROR: failed to read the current repository password from Keychain."
+      exit 1
+    fi
+
+    printf "%s" "$password" > "$tmp_new_pass"
+
+    if ! RESTIC_PASSWORD_COMMAND="$command_line" restic key passwd --new-password-file "$tmp_new_pass"; then
+      rm -f "$tmp_current_pass" "$tmp_new_pass"
       echo "ERROR: restic key passwd failed."
       exit 1
     fi
 
-    rm -f "$tmp_pass"
+    rotation_completed=true
   fi
 
-  security add-generic-password \
+  if ! security add-generic-password \
     -a "$keychain_account" \
     -s "$keychain_service" \
     -w "$password" \
-    -U >/dev/null
+    -U >/dev/null; then
+    if [[ "$rotation_completed" == "true" ]]; then
+      echo "ERROR: failed to update the Keychain entry after rotating the repository password."
+      echo "Attempting to roll the repository password back to the previous value..."
+      if RESTIC_PASSWORD="$password" RESTIC_PASSWORD_COMMAND="" restic key passwd --new-password-file "$tmp_current_pass"; then
+        rm -f "$tmp_current_pass" "$tmp_new_pass"
+        echo "Repository password rollback succeeded. The previous Keychain entry was kept."
+      else
+        echo "ERROR: repository password rollback failed."
+        echo "Recovery files were kept so you can finish recovery manually:"
+        echo "  previous password: $tmp_current_pass"
+        echo "  new password: $tmp_new_pass"
+      fi
+    else
+      echo "ERROR: failed to update the Keychain entry."
+    fi
+    exit 1
+  fi
 
   set_export_line "RESTIC_PASSWORD_COMMAND" "\"$command_line\""
+
+  if [[ "$rotation_completed" == "true" ]]; then
+    rm -f "$tmp_current_pass" "$tmp_new_pass"
+  fi
 
   if ! security find-generic-password -a "$keychain_account" -s "$keychain_service" -w >/dev/null 2>&1; then
     echo "ERROR: failed to verify Keychain entry."

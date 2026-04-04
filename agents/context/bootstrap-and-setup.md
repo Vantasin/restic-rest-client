@@ -16,7 +16,8 @@ Canonical human docs:
 - `bootstrap.sh` also manages whether the prune launch agent is present based
   on `RESTIC_PRUNE_ENABLED`.
 - `configure_env.sh` prompts for REST base URL and username and keeps local
-  repo-name/host defaults unless explicitly overridden.
+  repo-name/host defaults unless explicitly overridden. It also writes the
+  derived `RESTIC_REPOSITORY` value from the base URL plus repository name.
 - `init_repo.sh` initializes the configured repository and verifies access.
 - `setup_password.sh` manages REST server password storage plus repository
   password generation/rotation.
@@ -28,6 +29,8 @@ Canonical human docs:
   state.
 - The env template and prune install mode are part of bootstrap behavior, not
   just docs.
+- `--install` should validate `newsyslog` before loading the managed launchd
+  agents and should keep managed launchd/newsyslog changes rollback-safe.
 - `make install` should reconcile prune-agent state without overwriting local
   generated config; `--force` is the template-overwrite path.
 - Password setup changes are security-sensitive; avoid exposing secrets in

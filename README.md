@@ -86,9 +86,12 @@ access.
 make install
 ```
 
-This installs the backup and log-cleanup launchd agents plus the `newsyslog`
-config. The prune agent is installed only when `RESTIC_PRUNE_ENABLED=true`.
-The backup agent also runs once immediately when it is loaded.
+This validates `newsyslog` first and only then updates the managed launchd
+agents plus the `newsyslog` config. The prune agent is installed only when
+`RESTIC_PRUNE_ENABLED=true`. If install fails after changing managed state,
+`bootstrap.sh` rolls the managed launchd/newsyslog state back. Because the
+backup agent uses `RunAtLoad`, it runs once immediately after a successful
+install.
 
 ### 6. Watch the first scheduled-path run
 

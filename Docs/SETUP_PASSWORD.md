@@ -96,7 +96,11 @@ Rotation requires:
 - the repository reachable through the current REST URL
 - no running restic processes
 
-The script verifies repository access before rotating the password.
+The script verifies repository access before rotating the password. If the
+repository password changes successfully but the follow-up Keychain update
+fails, the script attempts to roll the repository password back to the previous
+value. If rollback also fails, it keeps recovery temp files and prints their
+paths so you can finish recovery manually.
 
 If you rotate the repository password, update any other machines that access
 the same repository.

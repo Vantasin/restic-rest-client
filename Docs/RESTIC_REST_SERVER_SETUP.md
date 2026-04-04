@@ -154,8 +154,10 @@ and only verifies access.
 make install
 ```
 
-This loads the launchd agents. The backup agent also runs once immediately
-when it is loaded.
+This validates `newsyslog` first and then updates the managed launchd agents.
+If install fails after changing managed state, `bootstrap.sh` rolls the managed
+launchd/newsyslog state back. The backup agent also runs once immediately when
+it is loaded successfully.
 
 ## 8. Watch the first automation-path run
 
