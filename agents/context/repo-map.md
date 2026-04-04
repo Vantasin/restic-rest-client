@@ -15,6 +15,8 @@ external REST-server backend.
   `run_backup.sh`
 - `bootstrap.sh`: generates local files from tracked templates and can install
   launchd/newsyslog assets
+- `setup.sh`: curl-friendly onboarding entry point that can install missing
+  Homebrew-managed dependencies, clone the repo, and start bootstrap/configure
 - `configure_env.sh`: populates required REST settings in `restic.env`
 - `init_repo.sh`: initializes the configured repository and verifies access
 - `setup_password.sh`: manages the Keychain-backed REST server and repository

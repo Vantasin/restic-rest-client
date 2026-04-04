@@ -3,6 +3,38 @@
 `bootstrap.sh` generates host-specific local files from the tracked templates
 and can install or uninstall the repo's launchd and `newsyslog` assets.
 
+Related setup entry point:
+
+- `setup.sh`: curl-friendly onboarding helper that can install dependencies,
+  clone the repo, then start `bootstrap.sh --generate` and
+  `configure_env.sh`
+
+## Curl Setup Helper
+
+For a fresh macOS client, `setup.sh` provides a higher-level entry point than
+the manual bootstrap flow:
+
+- checks for Homebrew
+- prompts to install missing required dependencies (`git`, `make`, `openssl`,
+  `restic`)
+- prompts to install optional dependencies such as `msmtp`
+- creates the parent clone directory
+- clones or reuses the repo checkout
+- starts `./bootstrap.sh --generate` and `./configure_env.sh`
+
+Example:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Vantasin/restic-rest-client/main/setup.sh | zsh
+```
+
+If you want a non-default clone location:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Vantasin/restic-rest-client/main/setup.sh | \
+  zsh -s -- --clone-dir "$HOME/Projects/restic-rest-client"
+```
+
 ## Modes
 
 - `--generate`: write local gitignored files only
@@ -71,6 +103,9 @@ files from templates and overwrite the installed `newsyslog` config.
 
 ## Recommended Order
 
+If you want the repo to handle dependency checks, cloning, and the initial
+bootstrap/configure handoff for you, run `setup.sh` first.
+
 1. Run `make bootstrap` or `./bootstrap.sh --generate`.
 2. Run `make configure` or `./configure_env.sh`.
 3. Review `restic.env` and adjust any optional settings you want. By default,
@@ -109,8 +144,9 @@ Populate the required REST settings in `restic.env`:
 ./configure_env.sh
 ```
 
-By default, this prompts only for the REST base URL and username and keeps the
-generated repo-name and host defaults.
+By default, this prompts only for the REST base URL and username, shows a
+concrete example for each input, and keeps the generated repo-name and host
+defaults.
 
 Makefile equivalent:
 

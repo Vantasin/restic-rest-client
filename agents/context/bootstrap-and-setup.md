@@ -11,6 +11,9 @@ Canonical human docs:
 
 ## Responsibilities
 
+- `setup.sh` is the curl-friendly onboarding entry point that can install
+  missing Homebrew-managed dependencies, clone the repo, and start
+  `bootstrap.sh --generate` plus `configure_env.sh`.
 - `bootstrap.sh` generates local files and can install/uninstall launchd and
   newsyslog assets.
 - `bootstrap.sh` also manages whether the prune launch agent is present based
@@ -27,6 +30,8 @@ Canonical human docs:
 
 - Bootstrap changes often affect both tracked templates and installed local
   state.
+- `setup.sh` owns the dependency-check, Homebrew-install prompt, and clone-path
+  handoff into the lower-level setup scripts.
 - The env template and prune install mode are part of bootstrap behavior, not
   just docs.
 - `--install` should validate `newsyslog` before loading the managed launchd

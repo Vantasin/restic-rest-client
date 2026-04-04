@@ -90,10 +90,24 @@ make bootstrap
 make configure
 ```
 
+If you want the client to handle missing Homebrew-managed dependencies, clone
+the repo into the default location, and then start the bootstrap/configure
+flow for you, you can instead run:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Vantasin/restic-rest-client/main/setup.sh | zsh
+```
+
+That setup helper can install missing required dependencies such as `git`,
+`make`, `openssl`, and `restic`, and can optionally install `msmtp`.
+
 The configure step prompts for:
 
 - `RESTIC_REPOSITORY_BASE_URL` using the admin-provided HTTPS base URL
 - `RESTIC_REST_USERNAME`
+
+The script also shows a concrete example for each prompt so users can match the
+expected input format without switching back to the docs.
 
 Using the concrete example above, `make configure` should receive:
 

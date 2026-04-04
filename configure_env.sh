@@ -267,8 +267,8 @@ fi
 [[ -n "$requested_repository_name" ]] && repository_name="$requested_repository_name"
 [[ -n "$requested_restic_host" ]] && restic_host="$requested_restic_host"
 
-repository_base_url="$(prompt_value "RESTIC_REPOSITORY_BASE_URL" "$repository_base_url")"
-rest_username="$(prompt_value "RESTIC_REST_USERNAME" "$rest_username")"
+repository_base_url="$(prompt_value "RESTIC_REPOSITORY_BASE_URL (example: https://restic.example.com/user)" "$repository_base_url")"
+rest_username="$(prompt_value "RESTIC_REST_USERNAME (example: user)" "$rest_username")"
 
 repository_base_url="$(normalize_base_url "$repository_base_url")"
 rest_username="$(normalize_required_text "RESTIC_REST_USERNAME" "$rest_username")"

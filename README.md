@@ -9,50 +9,43 @@ aligned to the companion `restic-rest-server` deployment model: HTTPS,
 Companion server repo:
 <https://github.com/Vantasin/restic-rest-server.git>
 
-## Prerequisites
+## Summary
 
-- macOS
-- `git` if you are cloning or updating the repo from the command line
-- `restic` for repository init, backup, restore, and prune operations
-- `make` for the documented shortcut commands
-
-Homebrew is the recommended install method for repo-managed dependencies, but it is not a hard requirement if you already have the tools available another way.
-
-```bash
-brew install git restic
-```
-
-Flow-specific tools:
-
-- `openssl` for `make setup-repository-password`
-- `msmtp` only if you want email notifications
-- macOS-provided tools such as `launchctl`, `newsyslog`, `security`, and
-  `sudo` for `make install` and Keychain-backed password flows
-
-Optional Homebrew installs:
-
-```bash
-brew install openssl@3
-brew install msmtp
-```
+- macOS client automation for an external `restic/rest-server` deployment
+- curl-friendly setup flow that can install missing dependencies, clone the
+  repo, and start the initial config handoff
+- Keychain-backed REST server and repository password workflows
+- launchd scheduling and `newsyslog` rotation for the local automation
+- defaults aligned to HTTPS, `--private-repos`, and append-only server mode
 
 ## Quick Start
 
-### 1. Clone the repo
+### 1. Run the canonical setup flow
 
 ```bash
-git clone https://github.com/Vantasin/restic-rest-client.git "$HOME/Git/restic-rest-client"
-cd "$HOME/Git/restic-rest-client"
+curl -fsSL https://raw.githubusercontent.com/Vantasin/restic-rest-client/main/setup.sh | zsh
 ```
 
-### 2. Generate local config and set server details
+That setup script can:
 
-Run:
+- check for Homebrew
+- prompt to install missing required dependencies (`git`, `make`, `openssl`,
+  `restic`)
+- prompt to install optional dependencies such as `msmtp`
+- create the default clone path at `~/Git/restic-rest-client`
+- clone the repo and start `bootstrap.sh --generate` plus `configure_env.sh`
+
+If you want a different clone location:
 
 ```bash
-make bootstrap
-make configure
+curl -fsSL https://raw.githubusercontent.com/Vantasin/restic-rest-client/main/setup.sh | \
+  zsh -s -- --clone-dir "$HOME/Projects/restic-rest-client"
 ```
+
+The remaining commands below assume the default clone path. If you used
+`--clone-dir`, replace `$HOME/Git/restic-rest-client` with your chosen path.
+
+### 2. Enter the server details when prompted
 
 The server admin should provide:
 
@@ -71,26 +64,17 @@ Do not enter only the server root such as
 `https://restic.example.com` unless the server admin explicitly tells
 you that the per-user base path is the root.
 
-`make configure` prompts only for the base URL and username. It keeps the
-local defaults for `RESTIC_REPOSITORY_NAME` and `RESTIC_HOST`, and
-`restic.env` derives the final `RESTIC_REPOSITORY` from those values. Edit
-`restic.env` afterward only if you want to change optional settings such as
-repo name, host label, prune mode, retention, notifications, or power guards.
-
-With the example above and the default repo name, the derived repository URL
-would look like:
-
-```text
-rest:https://restic.example.com/user/my-macbook
-```
+> Note: `restic.env` derives `RESTIC_REPOSITORY` from
+> `RESTIC_REPOSITORY_BASE_URL` and `RESTIC_REPOSITORY_NAME`, and it also owns
+> optional settings such as notifications, prune mode, retention, and power
+> guards. See [Docs/RESTIC_ENV.md](./Docs/RESTIC_ENV.md) for the full config
+> reference.
 
 ### 3. Store passwords in Keychain
 
 ```bash
+cd "$HOME/Git/restic-rest-client"
 make setup-rest-server-password
-```
-
-```bash
 make setup-repository-password
 ```
 
@@ -100,6 +84,7 @@ The first command stores the admin-provided REST server password and updates
 ### 4. Initialize the repository and verify access
 
 ```bash
+cd "$HOME/Git/restic-rest-client"
 make init-repo
 ```
 
@@ -110,6 +95,7 @@ access.
 ### 5. Install automation
 
 ```bash
+cd "$HOME/Git/restic-rest-client"
 make install
 ```
 
@@ -171,6 +157,8 @@ regenerate local files from templates and overwrite the installed
 
 - [`run_backup.sh`](./run_backup.sh): backup, prune, log-cleanup, and
   notification-test entry point
+- [`setup.sh`](./setup.sh): curl-friendly dependency check, clone, bootstrap,
+  and configure entry point
 - [`bootstrap.sh`](./bootstrap.sh): generates local files and installs
   launchd/newsyslog assets
 - [`configure_env.sh`](./configure_env.sh): populates the required REST

@@ -34,6 +34,7 @@ check_shell() {
 
   local file
   local -a shell_files=(
+    "setup.sh"
     "run_backup.sh"
     "configure_env.sh"
     "init_repo.sh"
@@ -46,6 +47,7 @@ check_shell() {
     "githooks/pre-commit"
   )
   local -a executable_files=(
+    "setup.sh"
     "run_backup.sh"
     "configure_env.sh"
     "init_repo.sh"
