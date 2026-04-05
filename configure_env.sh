@@ -296,6 +296,8 @@ echo "  RESTIC_REPOSITORY=rest:${repository_base_url%/}/${repository_name}"
 echo "  RESTIC_REST_USERNAME=$rest_username"
 echo
 echo "Next steps:"
+echo "  cd $SCRIPT_DIR"
 echo "  make setup-rest-server-password"
 echo "  make setup-repository-password"
 echo "  make init-repo"
+echo "  make install-and-watch"

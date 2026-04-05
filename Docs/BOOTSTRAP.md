@@ -119,7 +119,8 @@ bootstrap/configure handoff for you, run `setup.sh` first.
    `make setup-rest-server-password`.
 5. Generate the repository password with `make setup-repository-password`.
 6. Run `make init-repo` for first-time repository creation and verification.
-7. Run `make install` when you are ready to install launchd and `newsyslog`.
+7. Run `make install-and-watch` when you are ready to install launchd and
+   `newsyslog` and want to follow the install-triggered backup run.
 
 The password commands are safe to rerun during setup. They skip cleanly if the
 matching Keychain entry already exists. Use
@@ -157,7 +158,8 @@ By default, this prompts only for the REST base URL and username, shows a
 separate concrete example for each variable, shows the current value when one
 already exists, and tells you when pressing Enter will keep that current
 value. It keeps the generated repo-name and host defaults unless you override
-them.
+them, then prints one consolidated next-step block with `cd`, password setup,
+`make init-repo`, and `make install`.
 
 Makefile equivalent:
 
@@ -175,7 +177,14 @@ This validates the `newsyslog` config first. If validation succeeds, install
 updates the managed `newsyslog` and launchd state as one transaction and rolls
 those managed assets back if a later install step fails. Because the backup
 launchd template uses `RunAtLoad`, the backup job runs once immediately after a
-successful install.
+successful install. To watch only new output from that first automation-path
+run, use `make watch-backup-log`.
+
+Makefile convenience wrapper for the first install plus log follow:
+
+```bash
+make install-and-watch
+```
 
 Install with overwrites:
 

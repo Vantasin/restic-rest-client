@@ -19,6 +19,10 @@ external REST-server backend.
   Homebrew-managed dependencies, clone the repo, and start bootstrap/configure
 - `configure_env.sh`: populates required REST settings in `restic.env`
 - `init_repo.sh`: initializes the configured repository and verifies access
+- `install_and_watch.sh`: install helper that follows only daemon-log output
+  written during or after the install-triggered backup run
+- `watch_backup_log.sh`: helper to follow only new output from the launchd
+  backup daemon log
 - `restore_latest.sh`: convenience restore helper for the latest snapshot into
   an empty local target directory
 - `unlock_stale_locks.sh`: safe stale-lock cleanup helper for manual
@@ -31,8 +35,8 @@ external REST-server backend.
 - `restic-include-macos.txt.example`: tracked backup root template
 - `restic-exclude-macos.txt.example`: tracked exclude template
 - `Makefile`: convenience wrapper for setup/install tasks, common
-  `run_backup.sh` modes, restore/stale-lock maintenance, and repo validation
-  helpers
+  `run_backup.sh` modes, install/restore/log-watch/stale-lock maintenance, and
+  repo validation helpers
 - `Docs/`: canonical human-readable component documentation
 
 ## Generated local state

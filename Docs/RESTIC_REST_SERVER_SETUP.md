@@ -173,22 +173,23 @@ It uses the restic encryption password currently configured by
 `restic snapshots`. If the repository already exists, it skips `restic init`
 and only verifies access.
 
-## 7. Install the automation
+## 7. Install the automation and watch the first automation-path run
 
 ```bash
-make install
+make install-and-watch
 ```
 
 This validates `newsyslog` first and then updates the managed launchd agents.
 If install fails after changing managed state, `bootstrap.sh` rolls the managed
 launchd/newsyslog state back. The backup agent also runs once immediately when
-it is loaded successfully.
+it is loaded successfully. `make install-and-watch` then follows only log
+output written during or after that install-triggered run, so it does not
+replay stale daemon-log lines from older runs.
 
-## 8. Watch the first automation-path run
+If you prefer not to block the terminal, use `make install` and later
+`make watch-backup-log`.
 
-```bash
-tail -n 40 -f ~/Library/Logs/restic-rest-client/daemon_backup.log
-```
+## 8. Rerun the backup on demand later
 
 If you want to rerun the backup after that initial load-triggered run has
 finished, use:

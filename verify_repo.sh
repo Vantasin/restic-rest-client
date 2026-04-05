@@ -36,6 +36,8 @@ check_shell() {
   local -a shell_files=(
     "setup.sh"
     "run_backup.sh"
+    "install_and_watch.sh"
+    "watch_backup_log.sh"
     "restore_latest.sh"
     "unlock_stale_locks.sh"
     "configure_env.sh"
@@ -51,6 +53,8 @@ check_shell() {
   local -a executable_files=(
     "setup.sh"
     "run_backup.sh"
+    "install_and_watch.sh"
+    "watch_backup_log.sh"
     "restore_latest.sh"
     "unlock_stale_locks.sh"
     "configure_env.sh"

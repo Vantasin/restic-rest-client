@@ -255,19 +255,6 @@ run_repo_setup() {
       ./configure_env.sh
     fi
   ) || die "configure_env.sh failed."
-
-  say ""
-  say "Initial setup completed in $CLONE_DIR."
-  say "Next recommended steps:"
-  say "  cd $CLONE_DIR"
-  say "  ./setup_password.sh --rest-server"
-  say "  ./setup_password.sh --repository"
-  say "  ./init_repo.sh"
-  say "  ./bootstrap.sh --install"
-  say ""
-  say "Repeated password setup is safe:"
-  say "  --rest-server and --repository reuse existing Keychain entries"
-  say "  use --rest-server --replace or --repository --rotate for intentional changes"
 }
 
 if [[ "$(uname -s)" != "Darwin" ]]; then

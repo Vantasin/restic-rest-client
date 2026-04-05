@@ -1,9 +1,10 @@
 # Makefile Convenience Targets
 
 The Makefile is a thin wrapper around the repo's setup scripts, the common
-`run_backup.sh` task modes, the stale-lock maintenance helper, and local Git
-hook configuration. It exists to provide easy-to-remember shortcuts, while the
-underlying scripts and Git config remain the source of truth.
+`run_backup.sh` task modes, the install/log-watch/restore/stale-lock
+maintenance helpers, and local Git hook configuration. It exists to provide
+easy-to-remember shortcuts, while the underlying scripts and Git config remain
+the source of truth.
 
 ## Targets
 
@@ -48,6 +49,15 @@ mode without overwriting local generated config. If install fails after it has
 started changing managed state, `bootstrap.sh` rolls the managed
 launchd/newsyslog state back. The backup launch agent also runs once
 immediately when it is loaded successfully.
+
+```bash
+make install-and-watch
+```
+
+Run `make install`, then follow only daemon-log output written during or after
+that install-triggered backup run. This is the smoother first-run command when
+you want to confirm the immediate `RunAtLoad` backup without replaying stale
+daemon-log lines from older runs.
 
 ```bash
 make install-force
@@ -97,6 +107,14 @@ make logcleanup
 ```
 
 Delete old per-run logs according to `RESTIC_LOG_RETENTION_DAYS`.
+
+```bash
+make watch-backup-log
+```
+
+Follow only new output from the launchd backup daemon log. The helper starts
+from the end of `daemon_backup.log` so it does not replay stale lines from
+older runs, and it waits for the daemon log to appear if needed.
 
 ```bash
 make restore-latest

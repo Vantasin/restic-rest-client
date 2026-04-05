@@ -5,7 +5,7 @@ and notification testing. The launchd jobs call it with an explicit
 subcommand.
 
 For interactive use, the Makefile exposes matching convenience targets such as
-`make backup`, `make prune`, `make logcleanup`, and the `make test-...`
+`make backup`, `make prune`, `make logcleanup`, `make watch-backup-log`, and the `make test-...`
 notification helpers.
 
 For stale lock recovery, use `make unlock-stale-locks` or
@@ -66,6 +66,9 @@ Per-run logs are written to:
 
 Daemon logs are rotated by `newsyslog` via
 `/etc/newsyslog.d/com.restic-rest-client.conf`.
+
+To follow only new daemon-log output from scheduled backup runs, use
+`make watch-backup-log` or `./watch_backup_log.sh`.
 
 ## Behavior Notes
 

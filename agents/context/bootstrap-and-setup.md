@@ -18,19 +18,22 @@ Canonical human docs:
   newsyslog assets.
 - `bootstrap.sh` also manages whether the prune launch agent is present based
   on `RESTIC_PRUNE_ENABLED`.
+- `install_and_watch.sh` wraps `bootstrap.sh --install` and then follows only
+  daemon-log output written during or after the install-triggered backup run.
 - `configure_env.sh` prompts for REST base URL and username and keeps local
   repo-name/host defaults unless explicitly overridden. The prompt separates
   examples from current saved values and explicitly tells the user when Enter
   keeps the current value. It also writes the derived `RESTIC_REPOSITORY`
-  value from the base URL plus repository name.
+  value from the base URL plus repository name and owns the consolidated
+  post-config next-step output.
 - `init_repo.sh` initializes the configured repository and verifies access.
 - `setup_password.sh` manages REST server password storage plus repository
   password generation/rotation. `--rest-server` and `--repository` are
   idempotent by default; `--rest-server --replace` and
   `--repository --rotate` are the explicit secret-changing paths.
 - `Makefile` wraps common install/setup tasks, the direct
-  `run_backup.sh` operational modes, and the restore/stale-lock maintenance
-  helpers for convenience.
+  `run_backup.sh` operational modes, and the install/restore/log-watch/
+  stale-lock maintenance helpers for convenience.
 
 ## Agent concerns
 

@@ -60,7 +60,9 @@ Notes:
   `RESTIC_REST_USERNAME`, shows a separate example for each variable, shows
   the current saved value when one exists, and explicitly says when pressing
   Enter will keep that value. It then keeps or writes local defaults for
-  `RESTIC_REPOSITORY_NAME` and `RESTIC_HOST`
+  `RESTIC_REPOSITORY_NAME` and `RESTIC_HOST`, and ends by printing the
+  recommended `cd`, password setup, `make init-repo`, and
+  `make install-and-watch` commands
 - `RESTIC_REPOSITORY_NAME` is the client-side repo path segment created under
   that base URL
 - `RESTIC_REPOSITORY` should include the `rest:` backend prefix and is derived
