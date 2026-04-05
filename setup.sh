@@ -224,7 +224,7 @@ ensure_repo_checkout() {
   if [[ -d "$CLONE_DIR/.git" ]]; then
     say "Found an existing repo checkout at $CLONE_DIR."
     prompt_yes_no "Reuse the existing checkout and continue with bootstrap/configure?" "yes" || \
-      cancel "existing checkout was not reused. Rerun with --clone-dir to use a different location."
+      cancel $'existing checkout was not reused.\nIf you are piping into zsh, rerun with:\n  zsh -s -- --clone-dir "$HOME/Projects/restic-rest-client"\nIf you are running a local setup.sh file, use:\n  ./setup.sh --clone-dir "$HOME/Projects/restic-rest-client"'
     return 0
   fi
 
