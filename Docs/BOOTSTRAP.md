@@ -187,6 +187,9 @@ Makefile convenience wrapper for the first install plus log follow:
 make install-and-watch
 ```
 
+This helper exits on its own when that install-triggered backup run finishes,
+so you do not need to stop it manually after a normal success or skip.
+
 Install with overwrites:
 
 ```bash

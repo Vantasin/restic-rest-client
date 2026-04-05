@@ -19,7 +19,8 @@ Canonical human docs:
 - `bootstrap.sh` also manages whether the prune launch agent is present based
   on `RESTIC_PRUNE_ENABLED`.
 - `install_and_watch.sh` wraps `bootstrap.sh --install` and then follows only
-  daemon-log output written during or after the install-triggered backup run.
+  daemon-log output written during or after the install-triggered backup run
+  until that run finishes.
 - `configure_env.sh` prompts for REST base URL and username and keeps local
   repo-name/host defaults unless explicitly overridden. The prompt separates
   examples from current saved values and explicitly tells the user when Enter

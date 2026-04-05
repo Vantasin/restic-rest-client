@@ -20,7 +20,7 @@ external REST-server backend.
 - `configure_env.sh`: populates required REST settings in `restic.env`
 - `init_repo.sh`: initializes the configured repository and verifies access
 - `install_and_watch.sh`: install helper that follows only daemon-log output
-  written during or after the install-triggered backup run
+  written during or after the install-triggered backup run until it finishes
 - `watch_backup_log.sh`: helper to follow only new output from the launchd
   backup daemon log
 - `restore_latest.sh`: convenience restore helper for the latest snapshot into

@@ -116,11 +116,13 @@ run_backup_task() {
 
   if ! require_regular_file "Include file" "$INCLUDE_FILE"; then
     mark_task_preflight_failure
+    log "Backup task finished."
     return 1
   fi
 
   if ! require_regular_file "Exclude file" "$EXCLUDE_FILE"; then
     mark_task_preflight_failure
+    log "Backup task finished."
     return 1
   fi
 
@@ -130,8 +132,10 @@ run_backup_task() {
     guard_status=$?
   fi
   if [[ $guard_status -eq 10 ]]; then
+    log "Backup task finished."
     return 0
   elif [[ $guard_status -ne 0 ]]; then
+    log "Backup task finished."
     return 1
   fi
 
@@ -178,6 +182,7 @@ run_prune_task() {
     log "[INFO] Skipping prune because RESTIC_PRUNE_ENABLED is not true."
     log "[HINT] This repo defaults to disabled client-side prune to match append-only rest-server deployments."
     mark_task_skipped
+    log "Prune task finished."
     return 0
   fi
 
@@ -189,8 +194,10 @@ run_prune_task() {
     guard_status=$?
   fi
   if [[ $guard_status -eq 10 ]]; then
+    log "Prune task finished."
     return 0
   elif [[ $guard_status -ne 0 ]]; then
+    log "Prune task finished."
     return 1
   fi
 
