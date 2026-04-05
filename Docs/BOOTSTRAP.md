@@ -159,7 +159,7 @@ separate concrete example for each variable, shows the current value when one
 already exists, and tells you when pressing Enter will keep that current
 value. It keeps the generated repo-name and host defaults unless you override
 them, then prints one consolidated next-step block with `cd`, password setup,
-`make init-repo`, and `make install`.
+`make init-repo`, and `make install-and-watch`.
 
 Makefile equivalent:
 
@@ -177,8 +177,9 @@ This validates the `newsyslog` config first. If validation succeeds, install
 updates the managed `newsyslog` and launchd state as one transaction and rolls
 those managed assets back if a later install step fails. Because the backup
 launchd template uses `RunAtLoad`, the backup job runs once immediately after a
-successful install. To watch only new output from that first automation-path
-run, use `make watch-backup-log`.
+successful install. For that first install-triggered run, use
+`make install-and-watch`. To follow only new output from later automation-path
+runs, use `make watch-backup-log`.
 
 Makefile convenience wrapper for the first install plus log follow:
 

@@ -16,7 +16,12 @@ curl -fsSL https://raw.githubusercontent.com/Vantasin/restic-rest-client/main/se
 ```
 
 By default this clones or reuses `~/Git/restic-rest-client`. If you want a
-different location, rerun it with `--clone-dir /your/path`.
+different location, rerun it as:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Vantasin/restic-rest-client/main/setup.sh | \
+  zsh -s -- --clone-dir "$HOME/Projects/restic-rest-client"
+```
 
 > Note: The onboarding script checks for Homebrew and the required client
 > tools, offers optional installs such as `msmtp`, clones or reuses the repo,
