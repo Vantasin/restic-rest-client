@@ -61,9 +61,6 @@ follow_install_log() {
       fi
 
       exit "$terminal_exit_code"
-    elif [[ "$line" == *"Backup task finished."* ]]; then
-      echo "Install-triggered backup run finished."
-      exit 0
     fi
   done < "$tail_fifo"
 
