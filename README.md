@@ -82,12 +82,6 @@ regenerate local files from templates and overwrite the installed
 
 ## Common Tasks
 
-Run fast verification:
-
-```bash
-make verify
-```
-
 Run a backup:
 
 ```bash
@@ -124,6 +118,7 @@ make test-failure-email
 make test-warning-email
 make test-lock-failure-email
 ```
+> Required `msmtp` installed and email alerts setup in the `restic.env` file.
 
 Unlock stale locks:
 
