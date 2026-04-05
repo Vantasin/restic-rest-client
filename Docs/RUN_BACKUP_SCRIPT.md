@@ -75,6 +75,10 @@ To follow only new daemon-log output from scheduled backup runs, use
 - `logcleanup` only deletes per-run logs. Fixed daemon logs are rotated by
   `newsyslog`.
 - All script output is timestamped per line, including restic output.
+- Each run ends with a terminal marker in the form
+  `[STATE] run_backup.sh finished: task=<task> exit_code=<code>`. This lets
+  helpers such as `make install-and-watch` stop cleanly even when the backup
+  exits early.
 - The script logs a masked repository URL and `env: RESTIC_REPOSITORY` as the
   source.
 - Notification emails are multipart text+HTML messages with the per-run log

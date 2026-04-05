@@ -10,10 +10,26 @@ set -euo pipefail  # fail fast on unset vars and errors
 PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
 RESTIC_BIN=${RESTIC_BIN:-restic}
 MSMTP_BIN=${MSMTP_BIN:-msmtp}
+TASK="${1:-backup}"
+TERMINAL_MARKER_PREFIX="[STATE] run_backup.sh finished:"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 RESTIC_REPO_DISPLAY_VALUE=""
 RESTIC_REPO_SOURCE="unset"
+
+emit_terminal_marker() {
+  local exit_code="${1:-1}"
+  local marker="${TERMINAL_MARKER_PREFIX} task=${TASK:-unknown} exit_code=${exit_code}"
+
+  set +e
+  if typeset -f log >/dev/null 2>&1 && [[ -n "${LOGFILE:-}" ]]; then
+    log "$marker"
+  else
+    printf '%s\n' "$marker"
+  fi
+}
+
+trap 'emit_terminal_marker "$?"' EXIT
 
 # Load env vars (repo, password, host, etc.).
 if [ ! -f "$SCRIPT_DIR/restic.env" ]; then
@@ -27,7 +43,6 @@ source "$SCRIPT_DIR/restic.env"
 # 1) Load config and validate task.
 # 2) Dispatch to backup, prune, logcleanup, or notification test tasks.
 
-TASK="${1:-backup}"
 # Single entrypoint with explicit subcommands for launchd jobs.
 case "$TASK" in
   backup|prune|logcleanup|test-email|test-success-email|test-failure-email|test-warning-email|test-lock-failure-email) ;;

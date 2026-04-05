@@ -73,7 +73,7 @@ The script prints a short action log:
 - `WROTE:` for generated local files
 - `SKIP:` when a target already exists
 - `COPIED:` when launchd plists are copied to `~/Library/LaunchAgents`
-- `LOADED:` when launchd agents are loaded
+- `VERIFIED: <label> loaded` when a launchd agent is confirmed loaded
 - `INSTALLED:` when `/etc/newsyslog.d/com.restic-rest-client.conf` is written
 - `VERIFIED:` when launchd or `newsyslog` validation succeeds
 - `REMOVED:` when uninstall deletes a file
@@ -187,8 +187,10 @@ Makefile convenience wrapper for the first install plus log follow:
 make install-and-watch
 ```
 
-This helper exits on its own when that install-triggered backup run finishes,
-so you do not need to stop it manually after a normal success or skip.
+This helper exits on its own when that install-triggered backup run reaches a
+terminal outcome, including success, skip, or failure. It also returns that
+run's exit status, so startup or backup failures are surfaced instead of being
+hidden behind the watcher.
 
 Install with overwrites:
 

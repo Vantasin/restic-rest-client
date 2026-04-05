@@ -14,6 +14,8 @@ Canonical human doc: `Docs/RUN_BACKUP_SCRIPT.md`
   failure-classification helpers
 - Source `lib/tasks.sh` for backup, prune, and logcleanup task bodies
 - Timestamp log output
+- Emit a stable terminal marker with task name and exit code for daemon-log
+  watchers such as `install_and_watch.sh`
 - Apply retry-lock behavior
 - Apply power/clamshell guards
 - Mask REST URL credentials in log and notification output

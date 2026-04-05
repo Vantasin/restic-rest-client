@@ -180,7 +180,8 @@ locally or exclude them intentionally.
 - [`init_repo.sh`](./init_repo.sh): initializes the configured repository and
   verifies access
 - [`install_and_watch.sh`](./install_and_watch.sh): install automation and
-  follow only the install-triggered backup log output until that run finishes
+  follow only the install-triggered backup log output until that run reaches a
+  terminal outcome
 - [`watch_backup_log.sh`](./watch_backup_log.sh): follow only new output from
   the launchd backup daemon log
 - [`restore_latest.sh`](./restore_latest.sh): convenience restore helper for

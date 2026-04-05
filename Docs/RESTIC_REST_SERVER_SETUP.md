@@ -184,7 +184,8 @@ If install fails after changing managed state, `bootstrap.sh` rolls the managed
 launchd/newsyslog state back. The backup agent also runs once immediately when
 it is loaded successfully. `make install-and-watch` then follows only log
 output written during or after that install-triggered run until the run
-finishes, so it does not replay stale daemon-log lines from older runs.
+reaches a terminal outcome, so it does not replay stale daemon-log lines from
+older runs and it returns that run's exit status.
 
 If you prefer not to block the terminal, use `make install` and later
 `make watch-backup-log`.

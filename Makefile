@@ -7,7 +7,7 @@ help:
 	@echo "  make configure       Populate the required REST settings in restic.env"
 	@echo "  make init-repo       Initialize the configured repository and verify access"
 	@echo "  make install         Generate config and install launchd + newsyslog (prune only when enabled)"
-	@echo "  make install-and-watch Install launchd + newsyslog, then follow the install-triggered backup log output until that run finishes"
+	@echo "  make install-and-watch Install launchd + newsyslog, then follow the install-triggered backup log output until that run reaches a terminal outcome"
 	@echo "  make install-force   Overwrite existing files during install"
 	@echo "  make uninstall       Remove launchd + newsyslog and generated local config"
 	@echo "  make install-hooks   Configure this clone to use repo-managed git hooks"

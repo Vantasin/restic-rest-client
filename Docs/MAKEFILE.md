@@ -55,9 +55,10 @@ make install-and-watch
 ```
 
 Run `make install`, then follow only daemon-log output written during or after
-that install-triggered backup run until the run finishes. This is the smoother
-first-run command when you want to confirm the immediate `RunAtLoad` backup
-without replaying stale daemon-log lines from older runs.
+that install-triggered backup run until the run reaches a terminal outcome.
+This is the smoother first-run command when you want to confirm the immediate
+`RunAtLoad` backup without replaying stale daemon-log lines from older runs,
+and it returns the install-triggered run's exit status.
 
 ```bash
 make install-force

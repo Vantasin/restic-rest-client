@@ -8,13 +8,15 @@ start_byte=1
 tail_state_dir=""
 tail_fifo=""
 tail_pid=""
+terminal_marker_prefix="[STATE] run_backup.sh finished:"
 
 usage() {
   cat <<'EOF'
 Usage: ./install_and_watch.sh
 
 Run ./bootstrap.sh --install, then follow only daemon-log output written
-during or after that install-triggered backup run until the run finishes.
+during or after that install-triggered backup run until the run reaches a
+terminal outcome.
 EOF
 }
 
@@ -45,13 +47,27 @@ follow_install_log() {
 
   while IFS= read -r line; do
     printf '%s\n' "$line"
-    if [[ "$line" == *"Backup task finished."* ]]; then
+    if [[ "$line" == *"$terminal_marker_prefix"* ]]; then
+      local terminal_exit_code=1
+
+      if [[ "$line" =~ 'exit_code=([0-9]+)' ]]; then
+        terminal_exit_code="$match[1]"
+      fi
+
+      if [[ "$terminal_exit_code" -eq 0 ]]; then
+        echo "Install-triggered backup run finished."
+      else
+        echo "Install-triggered backup run finished with exit code $terminal_exit_code."
+      fi
+
+      exit "$terminal_exit_code"
+    elif [[ "$line" == *"Backup task finished."* ]]; then
       echo "Install-triggered backup run finished."
       exit 0
     fi
   done < "$tail_fifo"
 
-  echo "ERROR: stopped following $LOGFILE before the install-triggered backup run finished."
+  echo "ERROR: stopped following $LOGFILE before the install-triggered backup run reached a terminal outcome."
   exit 1
 }
 
