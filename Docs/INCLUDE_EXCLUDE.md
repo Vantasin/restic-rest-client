@@ -34,6 +34,11 @@ Common adjustments:
   are often large, noisy, and redundant with the devices or another backup
   layer. Remove that exclusion only if this Mac holds the only copy and you
   want restic to preserve it too.
+- The default macOS exclude template also skips some known
+  TCC-protected `~/Library` paths, including
+  `~/Library/Containers/com.apple.archiveutility`, to avoid repeated
+  `operation not permitted` warnings from data macOS commonly blocks in
+  unattended backups.
 - Exclude `~/Library/Mobile Documents` only if you intentionally treat iCloud
   data as cloud-managed and redundant elsewhere.
 

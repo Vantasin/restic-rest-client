@@ -127,6 +127,7 @@
 {{HOME}}/Library/ContainerManager
 {{HOME}}/Library/Containers/*/.com.apple.containermanagerd.metadata.plist
 {{HOME}}/Library/Containers/*/Data
+{{HOME}}/Library/Containers/com.apple.archiveutility
 {{HOME}}/Library/Containers/com.apple.Home
 {{HOME}}/Library/Containers/com.apple.Maps/Data/Maps
 {{HOME}}/Library/Containers/com.apple.MobileSMS
