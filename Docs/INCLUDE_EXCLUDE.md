@@ -39,6 +39,10 @@ Common adjustments:
   `~/Library/Containers/com.apple.archiveutility`, to avoid repeated
   `operation not permitted` warnings from data macOS commonly blocks in
   unattended backups.
+- The default macOS exclude template skips
+  `~/Library/Preferences/com.apple.xpc.activity2.plist`, an Apple scheduler
+  metadata file that can produce restic extended-attribute enumeration
+  warnings.
 - Exclude `~/Library/Mobile Documents` only if you intentionally treat iCloud
   data as cloud-managed and redundant elsewhere.
 

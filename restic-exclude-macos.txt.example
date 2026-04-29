@@ -156,6 +156,10 @@
 {{HOME}}/Library/Preferences/com.apple.madrid.plist
 {{HOME}}/Library/Preferences/com.apple.mail-shared.plist
 {{HOME}}/Library/Preferences/com.apple.messages.pinning.plist
+
+# Apple scheduler metadata can produce restic xattr enumeration warnings.
+{{HOME}}/Library/Preferences/com.apple.xpc.activity2.plist
+
 {{HOME}}/Library/Safari
 {{HOME}}/Library/Sharing
 {{HOME}}/Library/Shortcuts
