@@ -5,14 +5,14 @@ external REST-server backend.
 
 ## Primary components
 
-- `run_backup.sh`: single task entry point for backup, prune, log cleanup, and
-  notification test tasks
+- `run_backup.sh`: single task entry point for backup, check, prune, log
+  cleanup, and notification test tasks
 - `lib/platform.sh`: shared truthy parsing, macOS power/clamshell detection,
   file checks, and timestamped subprocess logging helpers
 - `lib/notifications.sh`: sourced notification formatting, email delivery, and
   failure-classification helpers used by `run_backup.sh`
-- `lib/tasks.sh`: sourced backup, prune, and logcleanup task helpers used by
-  `run_backup.sh`
+- `lib/tasks.sh`: sourced backup, check, prune, and logcleanup task helpers
+  used by `run_backup.sh`
 - `bootstrap.sh`: generates local files from tracked templates and can install
   launchd/newsyslog assets
 - `setup.sh`: curl-friendly onboarding entry point that can install missing
@@ -49,6 +49,7 @@ committed source of truth unless the task explicitly targets installed state:
 - `restic-include-macos.txt`
 - `restic-exclude-macos.txt`
 - `launchd/com.restic-rest-client.backup.plist`
+- `launchd/com.restic-rest-client.check.plist`
 - `launchd/com.restic-rest-client.prune.plist`
 - `launchd/com.restic-rest-client.logcleanup.plist`
 - `~/Library/LaunchAgents/com.restic-rest-client.*.plist`

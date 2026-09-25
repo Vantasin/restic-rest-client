@@ -7,6 +7,8 @@
 
 TASK_WAS_SKIPPED=false
 TASK_SHOULD_NOTIFY_FAILURE=true
+CHECK_MODE_SELECTED=""
+CHECK_SCHEDULE_ANCHOR_DATE=""
 
 mark_task_skipped() {
   TASK_WAS_SKIPPED=true
@@ -20,6 +22,52 @@ mark_task_preflight_failure() {
 reset_task_state() {
   TASK_WAS_SKIPPED=false
   TASK_SHOULD_NOTIFY_FAILURE=true
+  CHECK_MODE_SELECTED=""
+  CHECK_SCHEDULE_ANCHOR_DATE=""
+}
+
+resolve_check_anchor_date() {
+  local weekday_index
+
+  weekday_index="$(date +"%w")"
+  if [[ "$weekday_index" == "0" ]]; then
+    date +"%Y-%m-%d"
+  else
+    date -v-"${weekday_index}"d +"%Y-%m-%d"
+  fi
+}
+
+anchor_is_last_sunday_of_month() {
+  local anchor_date="$1"
+  local anchor_month next_sunday_month
+
+  anchor_month=$(date -j -f "%Y-%m-%d" "$anchor_date" +"%m")
+  next_sunday_month=$(date -j -v+7d -f "%Y-%m-%d" "$anchor_date" +"%m")
+  [[ "$anchor_month" != "$next_sunday_month" ]]
+}
+
+resolve_check_mode() {
+  local requested_mode="${1:-auto}"
+
+  case "$requested_mode" in
+    auto)
+      CHECK_SCHEDULE_ANCHOR_DATE="$(resolve_check_anchor_date)" || return 1
+      if anchor_is_last_sunday_of_month "$CHECK_SCHEDULE_ANCHOR_DATE"; then
+        CHECK_MODE_SELECTED="full"
+      else
+        CHECK_MODE_SELECTED="lite"
+      fi
+      ;;
+    lite|full)
+      CHECK_MODE_SELECTED="$requested_mode"
+      ;;
+    *)
+      log "ERROR: Unsupported check mode: $requested_mode"
+      return 1
+      ;;
+  esac
+
+  return 0
 }
 
 apply_task_guards() {
@@ -75,6 +123,9 @@ run_logcleanup_task() {
     cleanup_status=1
   fi
   if ! find "$logdir" -type f -name 'prune_*.log' -mtime +"$retention_days" -delete; then
+    cleanup_status=1
+  fi
+  if ! find "$logdir" -type f -name 'check_*.log' -mtime +"$retention_days" -delete; then
     cleanup_status=1
   fi
   if ! find "$logdir" -type f -name 'logcleanup_*.log' -mtime +"$retention_days" -delete; then
@@ -170,6 +221,90 @@ run_backup_task() {
 
   log "Backup task finished."
   return $backup_status
+}
+
+run_check_task() {
+  local check_status=0
+  local guard_status=0
+  local check_mode_requested="${CHECK_MODE_REQUESTED:-auto}"
+  local -a check_command
+
+  reset_task_state
+
+  if ! resolve_check_mode "$check_mode_requested"; then
+    mark_task_preflight_failure
+    log "Check task finished."
+    return 1
+  fi
+
+  log "[INFO] Check mode request: $check_mode_requested"
+  log "[INFO] Check mode selected: $CHECK_MODE_SELECTED"
+  if [[ "$check_mode_requested" == "auto" ]]; then
+    log "[INFO] Scheduled Sunday anchor: $CHECK_SCHEDULE_ANCHOR_DATE"
+    if [[ "$CHECK_MODE_SELECTED" == "full" ]]; then
+      log "[INFO] Auto mode selected full because the scheduled Sunday anchor is the last Sunday of the month."
+    else
+      log "[INFO] Auto mode selected lite because the scheduled Sunday anchor is not the last Sunday of the month."
+    fi
+  else
+    log "[INFO] Explicit check mode selected."
+  fi
+
+  log "[INFO] Check retry lock: $RESTIC_CHECK_RETRY_LOCK"
+  if [[ "$CHECK_MODE_SELECTED" == "lite" ]]; then
+    if [[ -z "${RESTIC_CHECK_LITE_READ_DATA_SUBSET:-}" ]]; then
+      mark_task_preflight_failure
+      log "ERROR: RESTIC_CHECK_LITE_READ_DATA_SUBSET must not be empty."
+      log "Check task finished."
+      return 1
+    fi
+    log "[INFO] Lite check read-data subset: $RESTIC_CHECK_LITE_READ_DATA_SUBSET"
+    check_command=(
+      "$RESTIC_BIN"
+      --retry-lock "$RESTIC_CHECK_RETRY_LOCK"
+      check
+      --read-data-subset "$RESTIC_CHECK_LITE_READ_DATA_SUBSET"
+    )
+  else
+    log "[INFO] Full check reads all repository data."
+    check_command=(
+      "$RESTIC_BIN"
+      --retry-lock "$RESTIC_CHECK_RETRY_LOCK"
+      check
+      --read-data
+    )
+  fi
+
+  if apply_task_guards "check" "$RESTIC_CHECK_REQUIRE_AC_POWER" "$RESTIC_CHECK_SKIP_WHEN_CLAMSHELL_CLOSED"; then
+    guard_status=0
+  else
+    guard_status=$?
+  fi
+  if [[ $guard_status -eq 10 ]]; then
+    log "Check task finished."
+    return 0
+  elif [[ $guard_status -ne 0 ]]; then
+    log "Check task finished."
+    return 1
+  fi
+
+  if run_command_logged "${check_command[@]}"; then
+    check_status=0
+  else
+    check_status=$?
+  fi
+
+  printf "\n" | tee -a "$LOGFILE"
+  log "Check exit code: $check_status"
+
+  if [[ $check_status -ne 0 ]]; then
+    log "ERROR: Restic check failed!"
+  else
+    log "Check completed successfully."
+  fi
+
+  log "Check task finished."
+  return $check_status
 }
 
 run_prune_task() {

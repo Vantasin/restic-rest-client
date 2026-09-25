@@ -1,4 +1,4 @@
-.PHONY: help bootstrap bootstrap-force configure init-repo install install-and-watch install-force uninstall install-hooks verify backup prune logcleanup watch-backup-log restore-latest unlock-stale-locks test-email test-success-email test-failure-email test-warning-email test-lock-failure-email setup-rest-server-password setup-rest-server-password-replace setup-repository-password setup-repository-password-rotate setup-password setup-password-rotate
+.PHONY: help bootstrap bootstrap-force configure init-repo install install-and-watch install-force uninstall install-hooks verify backup prune check logcleanup watch-backup-log restore-latest unlock-stale-locks test-email test-success-email test-failure-email test-warning-email test-lock-failure-email setup-rest-server-password setup-rest-server-password-replace setup-repository-password setup-repository-password-rotate setup-password setup-password-rotate
 
 help:
 	@echo "Targets:"
@@ -6,7 +6,7 @@ help:
 	@echo "  make bootstrap-force Overwrite existing local config files"
 	@echo "  make configure       Populate the required REST settings in restic.env"
 	@echo "  make init-repo       Initialize the configured repository and verify access"
-	@echo "  make install         Generate config and install launchd + newsyslog (prune only when enabled)"
+	@echo "  make install         Generate config and install launchd + newsyslog (check always, prune only when enabled)"
 	@echo "  make install-and-watch Install launchd + newsyslog, then follow the install-triggered backup log output until that run reaches a terminal outcome"
 	@echo "  make install-force   Overwrite existing files during install"
 	@echo "  make uninstall       Remove launchd + newsyslog and generated local config"
@@ -14,6 +14,7 @@ help:
 	@echo "  make verify          Run fast repo-wide consistency checks"
 	@echo "  make backup          Run a backup now"
 	@echo "  make prune           Run prune when client-side maintenance is enabled"
+	@echo "  make check           Run a repository check now (auto-select lite vs full)"
 	@echo "  make logcleanup      Delete old per-run logs"
 	@echo "  make watch-backup-log Follow only new output from the launchd backup daemon log"
 	@echo "  make restore-latest  Restore the latest snapshot into ~/restic-restore"
@@ -63,6 +64,9 @@ backup:
 
 prune:
 	./run_backup.sh prune
+
+check:
+	./run_backup.sh check
 
 logcleanup:
 	./run_backup.sh logcleanup

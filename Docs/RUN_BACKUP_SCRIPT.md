@@ -1,12 +1,12 @@
 # run_backup.sh Summary
 
-`run_backup.sh` is the single entry point for backups, pruning, log cleanup,
-and notification testing. The launchd jobs call it with an explicit
+`run_backup.sh` is the single entry point for backups, checks, pruning, log
+cleanup, and notification testing. The launchd jobs call it with an explicit
 subcommand.
 
 For interactive use, the Makefile exposes matching convenience targets such as
-`make backup`, `make prune`, `make logcleanup`, `make watch-backup-log`, and the `make test-...`
-notification helpers.
+`make backup`, `make check`, `make prune`, `make logcleanup`,
+`make watch-backup-log`, and the `make test-...` notification helpers.
 
 For stale lock recovery, use `make unlock-stale-locks` or
 `./unlock_stale_locks.sh`. That helper refuses to run while a `run_backup.sh`
@@ -15,6 +15,9 @@ or `restic` process is active.
 ## Commands
 
 - `./run_backup.sh` or `./run_backup.sh backup`: run a backup.
+- `./run_backup.sh check [auto|lite|full]`: run a repository integrity check.
+  `auto` selects lite on ordinary Sundays and full on the last Sunday of the
+  month using the most recent scheduled Sunday anchor.
 - `./run_backup.sh prune`: run `forget --prune` when
   `RESTIC_PRUNE_ENABLED=true`.
 - `./run_backup.sh logcleanup`: delete per-run logs older than the retention
@@ -38,13 +41,18 @@ or `restic` process is active.
 - `RESTIC_REPOSITORY`
 - `RESTIC_PASSWORD` or `RESTIC_PASSWORD_COMMAND`
 - `RESTIC_RETRY_LOCK` (default `10m`)
+- `RESTIC_CHECK_RETRY_LOCK` (default `60m`)
+- `RESTIC_CHECK_LITE_READ_DATA_SUBSET` (default `10%`)
 - `RESTIC_PRUNE_ENABLED` (default `false`)
 - `RESTIC_NOTIFY_EMAIL`
 - `RESTIC_NOTIFY_ON_FAILURE` (default `true`)
 - `RESTIC_NOTIFY_ON_SUCCESS` (default `false`)
+- `RESTIC_{BACKUP,PRUNE,CHECK}_NOTIFY_ON_{FAILURE,SUCCESS}` (optional per-task overrides)
 - `RESTIC_LOG_RETENTION_DAYS` (default `14`)
 - `RESTIC_BACKUP_REQUIRE_AC_POWER`
 - `RESTIC_BACKUP_SKIP_WHEN_CLAMSHELL_CLOSED`
+- `RESTIC_CHECK_REQUIRE_AC_POWER`
+- `RESTIC_CHECK_SKIP_WHEN_CLAMSHELL_CLOSED`
 - `RESTIC_PRUNE_REQUIRE_AC_POWER`
 - `RESTIC_PRUNE_SKIP_WHEN_CLAMSHELL_CLOSED`
 - `RESTIC_KEEP_DAILY`, `RESTIC_KEEP_WEEKLY`, `RESTIC_KEEP_MONTHLY`
@@ -55,6 +63,7 @@ Per-run logs are written to:
 
 ```text
 ~/Library/Logs/restic-rest-client/backup_YYYY-MM-DD_HH-MM-SS.log
+~/Library/Logs/restic-rest-client/check_YYYY-MM-DD_HH-MM-SS.log
 ~/Library/Logs/restic-rest-client/prune_YYYY-MM-DD_HH-MM-SS.log
 ~/Library/Logs/restic-rest-client/logcleanup_YYYY-MM-DD_HH-MM-SS.log
 ~/Library/Logs/restic-rest-client/test-email_YYYY-MM-DD_HH-MM-SS.log
@@ -64,7 +73,16 @@ Per-run logs are written to:
 ~/Library/Logs/restic-rest-client/test-lock-failure-email_YYYY-MM-DD_HH-MM-SS.log
 ```
 
-Daemon logs are rotated by `newsyslog` via
+Daemon logs are written to:
+
+```text
+~/Library/Logs/restic-rest-client/daemon_backup.log
+~/Library/Logs/restic-rest-client/daemon_check.log
+~/Library/Logs/restic-rest-client/daemon_prune.log
+~/Library/Logs/restic-rest-client/daemon_logcleanup.log
+```
+
+These fixed daemon logs are rotated by `newsyslog` via
 `/etc/newsyslog.d/com.restic-rest-client.conf`.
 
 To follow only new daemon-log output from scheduled backup runs, use
@@ -83,15 +101,19 @@ To follow only new daemon-log output from scheduled backup runs, use
   source.
 - Notification emails are multipart text+HTML messages with the per-run log
   attached as a text file.
+- Per-task notification overrides for backup, prune, and check fall back to the
+  global success/failure flags when unset.
 - Notification test tasks do not touch the repository.
 - Success and failure-style test tasks ignore
   `RESTIC_NOTIFY_ON_SUCCESS` and `RESTIC_NOTIFY_ON_FAILURE`; they are explicit
   operator tests.
+- `check auto` uses the most recent scheduled Sunday anchor so a sleep/wake
+  catch-up run still chooses `full` on a month-end cycle.
 - If `RESTIC_PRUNE_ENABLED` is not true, `prune` logs that it was skipped and
   exits `0` without contacting the repository.
 - Backup exit `3` notifications are warning-style alerts rather than hard
   failures.
-- Backup and prune failure emails add a stale-lock remediation note when restic
-  exits `11` or the log clearly shows repository lock errors.
-- Backup and prune can intentionally skip a run and exit `0` when power or
-  clamshell guards block the task.
+- Backup, check, and prune failure emails add a stale-lock remediation note
+  when restic exits `11` or the log clearly shows repository lock errors.
+- Backup, check, and prune can intentionally skip a run and exit `0` when
+  power or clamshell guards block the task.

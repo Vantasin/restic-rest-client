@@ -53,6 +53,7 @@ different `--clone-dir`.
 - `restic-include-macos.txt` from `restic-include-macos.txt.example`
 - `restic-exclude-macos.txt` from `restic-exclude-macos.txt.example`
 - `launchd/com.restic-rest-client.backup.plist` from the matching template
+- `launchd/com.restic-rest-client.check.plist` from the matching template
 - `launchd/com.restic-rest-client.prune.plist` from the matching template
 - `launchd/com.restic-rest-client.logcleanup.plist` from the matching template
 
@@ -83,13 +84,16 @@ non-zero. `--install` validates `newsyslog` before loading the managed launchd
 agents, and if a later install step fails it rolls the managed launchd and
 `newsyslog` state back.
 
-## Prune Install Behavior
+## Managed Agent Install Behavior
 
-Backup and log cleanup are always installed.
+Backup, check, and log cleanup are always installed.
 
 The prune launch agent is installed only when `RESTIC_PRUNE_ENABLED=true` in
 `restic.env`. That matches the companion server repo's default append-only
 access model.
+
+The current prune template runs nightly at 23:00 when enabled and loaded.
+Existing generated plists retain their previous schedule until updated.
 
 If prune is disabled, install removes any previously installed prune launch
 agent and verifies that it is not still loaded.
@@ -104,6 +108,47 @@ That reloads the installed launchd agents and adds or removes the prune launch
 agent to match the new setting without overwriting your local generated config.
 Use `make install-force` only when you intentionally want to regenerate local
 files from templates and overwrite the installed `newsyslog` config.
+
+## Upgrading An Existing Installation
+
+Normal `make install` preserves existing generated files and the installed
+`newsyslog` configuration. To adopt the weekly check job and the new prune
+schedule without overwriting your credentials or custom exclusions:
+
+1. Run `make bootstrap` to generate missing files, including the check plist.
+   Existing `restic.env`, include/exclude files, and plists are preserved.
+2. Review `launchd/com.restic-rest-client.prune.plist`. To adopt the new
+   schedule, change `StartCalendarInterval` to hour `23`, minute `0`. Keep any
+   other local customizations. Validate it with
+   `plutil -lint launchd/com.restic-rest-client.prune.plist`.
+3. Back up the installed rotation config, then edit it:
+
+   ```bash
+   sudo cp -p /etc/newsyslog.d/com.restic-rest-client.conf \
+     "/etc/newsyslog.d/com.restic-rest-client.conf.backup-$(date +%Y%m%d%H%M%S)"
+   sudoedit /etc/newsyslog.d/com.restic-rest-client.conf
+   ```
+
+   Duplicate the existing `daemon_backup.log` rule, changing only its filename
+   to `daemon_check.log`. Keep the expanded home path, owner, and rotation
+   settings; do not paste unresolved template placeholders. If a check rule
+   already exists, retain just one. Validate before proceeding:
+
+   ```bash
+   sudo newsyslog -n -f /etc/newsyslog.d/com.restic-rest-client.conf
+   ```
+
+4. Review the optional check and per-task notification settings in
+   [RESTIC_ENV.md](./RESTIC_ENV.md#check-mode). Existing configs use the runtime
+   defaults unless you add overrides.
+5. Run `make install` to reload the managed agents. This starts an immediate
+   backup through `RunAtLoad`; the check job waits for its Sunday schedule.
+   Confirm it loaded with
+   `launchctl print "gui/$(id -u)/com.restic-rest-client.check"`.
+
+Avoid `make install-force` for this migration: it also replaces `restic.env`
+and your local include/exclude lists. Local exclusions, such as intentionally
+omitted application profiles, are Git-ignored and are not preserved by a push.
 
 ## Recommended Order
 
@@ -229,5 +274,7 @@ If you prefer not to use `bootstrap.sh`, the equivalent setup is:
 7. Install the `newsyslog` config at
    `/etc/newsyslog.d/com.restic-rest-client.conf`.
 
-If you install launchd manually and later change `RESTIC_PRUNE_ENABLED`,
-remember to add or remove `com.restic-rest-client.prune.plist` yourself.
+If you install launchd manually, remember to keep the backup, check, and
+logcleanup agents aligned with the tracked templates. If you later change
+`RESTIC_PRUNE_ENABLED`, remember to add or remove
+`com.restic-rest-client.prune.plist` yourself.

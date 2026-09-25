@@ -12,7 +12,7 @@ newsyslog behavior.
 
 ## Non-negotiables
 
-- Keep backup, prune, and logcleanup responsibilities distinct.
+- Keep backup, check, prune, and logcleanup responsibilities distinct.
 - Keep prune install behavior aligned with `RESTIC_PRUNE_ENABLED`.
 - Treat schedule changes as operator-visible changes that require doc updates.
 - Treat power-guard changes as behavioral changes, not minor implementation

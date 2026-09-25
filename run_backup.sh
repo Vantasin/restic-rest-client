@@ -11,6 +11,7 @@ PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
 RESTIC_BIN=${RESTIC_BIN:-restic}
 MSMTP_BIN=${MSMTP_BIN:-msmtp}
 TASK="${1:-backup}"
+CHECK_MODE_REQUESTED="${2:-auto}"
 TERMINAL_MARKER_PREFIX="[STATE] run_backup.sh finished:"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -39,18 +40,41 @@ fi
 
 source "$SCRIPT_DIR/restic.env"
 
+usage() {
+  cat <<'EOF'
+Usage: ./run_backup.sh [backup|prune|check [auto|lite|full]|logcleanup|test-email|test-success-email|test-failure-email|test-warning-email|test-lock-failure-email]
+EOF
+}
+
 # Execution flow:
 # 1) Load config and validate task.
-# 2) Dispatch to backup, prune, logcleanup, or notification test tasks.
+# 2) Dispatch to backup, check, prune, logcleanup, or notification test tasks.
 
 # Single entrypoint with explicit subcommands for launchd jobs.
 case "$TASK" in
-  backup|prune|logcleanup|test-email|test-success-email|test-failure-email|test-warning-email|test-lock-failure-email) ;;
+  backup|prune|check|logcleanup|test-email|test-success-email|test-failure-email|test-warning-email|test-lock-failure-email) ;;
   *)
-    echo "Usage: $0 [backup|prune|logcleanup|test-email|test-success-email|test-failure-email|test-warning-email|test-lock-failure-email]"
+    usage
     exit 1
     ;;
 esac
+
+if [[ "$TASK" == "check" ]]; then
+  if [[ $# -gt 2 ]]; then
+    usage
+    exit 1
+  fi
+  case "$CHECK_MODE_REQUESTED" in
+    auto|lite|full) ;;
+    *)
+      usage
+      exit 1
+      ;;
+  esac
+elif [[ $# -gt 1 ]]; then
+  usage
+  exit 1
+fi
 
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
 LOGDIR="$HOME/Library/Logs/restic-rest-client"
@@ -68,6 +92,10 @@ RESTIC_BACKUP_REQUIRE_AC_POWER="${RESTIC_BACKUP_REQUIRE_AC_POWER:-false}"
 RESTIC_BACKUP_SKIP_WHEN_CLAMSHELL_CLOSED="${RESTIC_BACKUP_SKIP_WHEN_CLAMSHELL_CLOSED:-false}"
 RESTIC_PRUNE_REQUIRE_AC_POWER="${RESTIC_PRUNE_REQUIRE_AC_POWER:-false}"
 RESTIC_PRUNE_SKIP_WHEN_CLAMSHELL_CLOSED="${RESTIC_PRUNE_SKIP_WHEN_CLAMSHELL_CLOSED:-false}"
+RESTIC_CHECK_RETRY_LOCK="${RESTIC_CHECK_RETRY_LOCK:-60m}"
+RESTIC_CHECK_LITE_READ_DATA_SUBSET="${RESTIC_CHECK_LITE_READ_DATA_SUBSET:-10%}"
+RESTIC_CHECK_REQUIRE_AC_POWER="${RESTIC_CHECK_REQUIRE_AC_POWER:-false}"
+RESTIC_CHECK_SKIP_WHEN_CLAMSHELL_CLOSED="${RESTIC_CHECK_SKIP_WHEN_CLAMSHELL_CLOSED:-false}"
 
 log() {
   local now
@@ -114,12 +142,13 @@ require_repository_context_or_exit() {
 
 log_task_start() {
   local task_label="$1"
+  local retry_lock_value="${2:-$RESTIC_RETRY_LOCK}"
 
   log "Starting Restic ${task_label}..."
   log "[INFO] Repository source: $RESTIC_REPO_SOURCE"
   log "[INFO] Using repository: $RESTIC_REPO_DISPLAY_VALUE"
   log "[INFO] Host: $RESTIC_HOST"
-  log "[INFO] Retry lock: $RESTIC_RETRY_LOCK"
+  log "[INFO] Retry lock: $retry_lock_value"
 }
 
 run_notification_test_task_or_exit() {
@@ -206,6 +235,54 @@ run_prune_or_exit() {
   exit $prune_status
 }
 
+build_check_notification_note() {
+  local note_text
+
+  note_text="Check mode: ${CHECK_MODE_SELECTED:-unknown}"
+  if [[ "${CHECK_MODE_SELECTED:-}" == "lite" ]]; then
+    note_text="${note_text}
+Read-data subset: ${RESTIC_CHECK_LITE_READ_DATA_SUBSET}"
+  elif [[ "${CHECK_MODE_SELECTED:-}" == "full" ]]; then
+    note_text="${note_text}
+Read-data scope: all repository data"
+  fi
+
+  if [[ "${CHECK_MODE_REQUESTED:-auto}" == "auto" && -n "${CHECK_SCHEDULE_ANCHOR_DATE:-}" ]]; then
+    note_text="${note_text}
+Scheduled Sunday anchor: ${CHECK_SCHEDULE_ANCHOR_DATE}"
+  fi
+
+  printf '%s' "$note_text"
+}
+
+run_check_or_exit() {
+  local check_status=0
+  local note_text subject_suffix
+
+  require_repository_context_or_exit
+  log_task_start "check" "$RESTIC_CHECK_RETRY_LOCK"
+  if run_check_task; then
+    check_status=0
+  else
+    check_status=$?
+  fi
+
+  if [[ "$TASK_WAS_SKIPPED" == true ]]; then
+    exit 0
+  fi
+
+  note_text="$(build_check_notification_note)"
+  subject_suffix=" [${CHECK_MODE_SELECTED:-unknown}]"
+
+  if [[ $check_status -eq 0 ]]; then
+    notify_success "check" "${RESTIC_REPO_DISPLAY_VALUE:-unset}" "false" "$note_text" "$subject_suffix"
+  elif [[ "$TASK_SHOULD_NOTIFY_FAILURE" == true ]]; then
+    notify_failure "$check_status" "check" "false" "$note_text" "$subject_suffix"
+  fi
+
+  exit $check_status
+}
+
 case "$TASK" in
   logcleanup) run_logcleanup_or_exit ;;
   test-email) run_notification_test_task_or_exit "generic" "test email" ;;
@@ -215,4 +292,5 @@ case "$TASK" in
   test-lock-failure-email) run_notification_test_task_or_exit "lock-failure" "test lock failure email" ;;
   backup) run_backup_or_exit ;;
   prune) run_prune_or_exit ;;
+  check) run_check_or_exit ;;
 esac

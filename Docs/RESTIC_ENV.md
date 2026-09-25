@@ -165,6 +165,33 @@ config. Use `make install-force` only when you intentionally want to
 regenerate local files from templates and overwrite the installed
 `newsyslog` config.
 
+## Check Mode
+
+The managed launchd install always includes a weekly `check` job alongside the
+backup and log-cleanup jobs.
+
+`./run_backup.sh check` defaults to `auto`, which selects its mode from the
+most recent scheduled Sunday anchor so sleep/wake catch-up runs still preserve
+the intended cadence:
+
+- ordinary Sundays run a lite check via `restic check --read-data-subset`
+- the last Sunday of the month runs a full check via `restic check --read-data`
+
+You can also force the mode manually:
+
+```bash
+./run_backup.sh check
+./run_backup.sh check lite
+./run_backup.sh check full
+```
+
+Default knobs:
+
+```bash
+export RESTIC_CHECK_RETRY_LOCK="60m"
+export RESTIC_CHECK_LITE_READ_DATA_SUBSET="10%"
+```
+
 ## Email Notifications
 
 If `RESTIC_NOTIFY_EMAIL` is set, `run_backup.sh` can send failure and success
@@ -176,6 +203,22 @@ export RESTIC_NOTIFY_SUBJECT_PREFIX="[restic]"
 export RESTIC_NOTIFY_ON_FAILURE="true"
 export RESTIC_NOTIFY_ON_SUCCESS="false"
 ```
+
+Those global flags are the defaults for all tasks. You can override them per
+repository action:
+
+```bash
+export RESTIC_BACKUP_NOTIFY_ON_FAILURE="true"
+export RESTIC_BACKUP_NOTIFY_ON_SUCCESS="false"
+export RESTIC_PRUNE_NOTIFY_ON_FAILURE="true"
+export RESTIC_PRUNE_NOTIFY_ON_SUCCESS="false"
+export RESTIC_CHECK_NOTIFY_ON_FAILURE="true"
+export RESTIC_CHECK_NOTIFY_ON_SUCCESS="true"
+```
+
+If a per-task variable is unset, that task falls back to the matching global
+flag. This lets backup remain quiet while weekly/monthly check successes still
+send mail if you want them to.
 
 If your `msmtp` binary is not in the default path:
 
@@ -197,10 +240,17 @@ Those exercise the notification path without contacting the repository.
 
 ## Lock Retry
 
-Wait for an active restic lock instead of failing immediately:
+Backup and prune use the global lock retry:
 
 ```bash
 export RESTIC_RETRY_LOCK="10m"
+```
+
+The scheduled check job uses its own default because the monthly full read can
+reasonably wait longer than routine backup work:
+
+```bash
+export RESTIC_CHECK_RETRY_LOCK="60m"
 ```
 
 ## Log Retention
@@ -215,19 +265,21 @@ export RESTIC_LOG_RETENTION_DAYS="14"
 ## Laptop Power Guards
 
 On MacBooks, battery or sleep transitions can interrupt backups and leave stale
-restic locks. You can tell `run_backup.sh` to skip backup or prune runs in
+restic locks. You can tell `run_backup.sh` to skip backup, check, or prune runs in
 those states:
 
 ```bash
 export RESTIC_BACKUP_REQUIRE_AC_POWER="true"
 export RESTIC_BACKUP_SKIP_WHEN_CLAMSHELL_CLOSED="false"
+export RESTIC_CHECK_REQUIRE_AC_POWER="true"
+export RESTIC_CHECK_SKIP_WHEN_CLAMSHELL_CLOSED="false"
 export RESTIC_PRUNE_REQUIRE_AC_POWER="true"
 export RESTIC_PRUNE_SKIP_WHEN_CLAMSHELL_CLOSED="false"
 ```
 
-Backup guards apply only to `backup`. Prune guards apply only to `prune`.
-Clamshell guards default to `false` because closed-lid use on AC power can be
-normal for docked MacBooks.
+Backup guards apply only to `backup`. Check guards apply only to `check`.
+Prune guards apply only to `prune`. Clamshell guards default to `false`
+because closed-lid use on AC power can be normal for docked MacBooks.
 
 ## Prune Policy Overrides
 

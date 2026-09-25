@@ -12,6 +12,7 @@ Related agent context:
 ## Launchd jobs
 
 - `com.restic-rest-client.backup`
+- `com.restic-rest-client.check`
 - `com.restic-rest-client.prune`
 - `com.restic-rest-client.logcleanup`
 
@@ -20,13 +21,14 @@ under `~/Library/LaunchAgents/`.
 
 ## Logging model
 
-- Per-run logs: `~/Library/Logs/restic-rest-client/{backup,prune,logcleanup,test-email,test-success-email,test-failure-email,test-warning-email,test-lock-failure-email}_*.log`
-- Daemon logs: `~/Library/Logs/restic-rest-client/daemon_{backup,prune,logcleanup}.log`
+- Per-run logs: `~/Library/Logs/restic-rest-client/{backup,check,prune,logcleanup,test-email,test-success-email,test-failure-email,test-warning-email,test-lock-failure-email}_*.log`
+- Daemon logs: `~/Library/Logs/restic-rest-client/daemon_{backup,check,prune,logcleanup}.log`
 - Daemon logs are rotated by `newsyslog`
 
 ## Agent concerns
 
 - Distinguish tracked plist changes from installed local agent changes.
+- Check is always installed and uses a weekly Sunday 04:00 schedule.
 - Prune is mode-dependent: the plist exists as a tracked template, but install
   only loads it when `RESTIC_PRUNE_ENABLED=true`.
 - Schedule changes are operationally significant and must be documented.

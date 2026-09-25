@@ -11,8 +11,8 @@ deeper reference material.
   uninstall, and manual setup flow
 - [`RESTIC_ENV.md`](./RESTIC_ENV.md): `restic.env` defaults and repository
   configuration
-- [`RUN_BACKUP_SCRIPT.md`](./RUN_BACKUP_SCRIPT.md): backup, prune, log-cleanup,
-  and notification-test behavior
+- [`RUN_BACKUP_SCRIPT.md`](./RUN_BACKUP_SCRIPT.md): backup, check, prune,
+  log-cleanup, and notification-test behavior
 - [`INCLUDE_EXCLUDE.md`](./INCLUDE_EXCLUDE.md): backup scope and include/exclude
   guidance
 - [`RESTIC_REST_SERVER_SETUP.md`](./RESTIC_REST_SERVER_SETUP.md): onboarding

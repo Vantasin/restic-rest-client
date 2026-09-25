@@ -7,12 +7,12 @@ Canonical human doc: `Docs/RUN_BACKUP_SCRIPT.md`
 - Load environment and local config
 - Resolve the repository location from `RESTIC_REPOSITORY`
 - Use `RESTIC_REST_*` environment variables for REST-server auth when present
-- Run `backup`, `prune`, `logcleanup`, or notification test tasks
+- Run `backup`, `check`, `prune`, `logcleanup`, or notification test tasks
 - Source `lib/platform.sh` for shared truthy parsing, macOS power/clamshell
   checks, file checks, and timestamped subprocess logging helpers
 - Source `lib/notifications.sh` for notification rendering, email delivery, and
   failure-classification helpers
-- Source `lib/tasks.sh` for backup, prune, and logcleanup task bodies
+- Source `lib/tasks.sh` for backup, check, prune, and logcleanup task bodies
 - Timestamp log output
 - Emit a stable terminal marker with task name and exit code for daemon-log
   watchers such as `install_and_watch.sh`
@@ -31,16 +31,18 @@ Canonical human doc: `Docs/RUN_BACKUP_SCRIPT.md`
   `unlock_stale_locks.sh`.
 - Repository derivation changes belong to the env template/configure flow, not
   to `run_backup.sh`, unless runtime repository resolution itself changes.
-- Backup and prune changes can alter operational safety, lock behavior, or job
-  timing; treat them as high-impact.
+- Backup, check, and prune changes can alter operational safety, lock
+  behavior, or job timing; treat them as high-impact.
 - Exit-code handling matters because operators use logs and notifications to
   distinguish success, partial backup, skipped tasks, and hard failures.
 
 ## Current behavior themes
 
-- `backup` and `prune` support AC-power and clamshell guards.
+- `backup`, `check`, and `prune` support AC-power and clamshell guards.
 - `logcleanup` and notification test tasks are local-only and intentionally
   simpler.
 - Prune is long-running, lock-sensitive, and intentionally disabled by default.
+- Check auto mode chooses lite versus full verification from the most recent
+  scheduled Sunday anchor.
 - Backup behavior interacts with macOS privacy restrictions and cloud-managed
   files.

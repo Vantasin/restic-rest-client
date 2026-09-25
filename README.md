@@ -37,8 +37,8 @@ curl -fsSL https://raw.githubusercontent.com/Vantasin/restic-rest-client/main/se
 
 `restic.env` is the local client config file. The onboarding flow populates the
 required repository URL and REST username, and the same file also controls
-optional behavior such as prune, retention, email alerts, AC-power
-requirements, and clamshell rules.
+optional behavior such as prune, weekly/monthly repository checks, retention,
+email alerts, AC-power requirements, and clamshell rules.
 
 You can edit `restic.env` manually later and apply those changes with:
 
@@ -48,7 +48,7 @@ make install
 ```
 
 For the full variable reference, example values, and the settings behind
-prune, notifications, power guards, and lid-closed behavior, see
+prune, checks, notifications, power guards, and lid-closed behavior, see
 [Docs/RESTIC_ENV.md](./Docs/RESTIC_ENV.md).
 
 ## Access Model
@@ -97,6 +97,13 @@ Run prune, only when the server allows client-side maintenance:
 
 ```bash
 make prune
+```
+
+Run a repository check now. `make check` auto-selects lite on ordinary Sundays
+and full on the last Sunday of the month:
+
+```bash
+make check
 ```
 
 Run log cleanup:
@@ -169,7 +176,7 @@ locally or exclude them intentionally.
 
 ## What This Repo Contains
 
-- [`run_backup.sh`](./run_backup.sh): backup, prune, log-cleanup, and
+- [`run_backup.sh`](./run_backup.sh): backup, check, prune, log-cleanup, and
   notification-test entry point
 - [`setup.sh`](./setup.sh): curl-friendly dependency check, clone, bootstrap,
   and configure entry point

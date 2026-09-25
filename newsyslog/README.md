@@ -24,3 +24,7 @@ configuration installed from this directory.
 - The tracked `.example` file is the git source of truth.
 - Installing or replacing the live config requires the bootstrap flow or a
   manual `sudo` copy into `/etc/newsyslog.d/`.
+- Rotation covers backup, check, prune, and logcleanup daemon logs. Existing
+  installations need the targeted migration in
+  [BOOTSTRAP.md](../Docs/BOOTSTRAP.md#upgrading-an-existing-installation) to add
+  check rotation while preserving local settings.

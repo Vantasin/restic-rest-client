@@ -4,31 +4,33 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.restic-rest-client.prune</string>
+    <string>com.restic-rest-client.check</string>
 
     <key>ProgramArguments</key>
     <array>
-        <!-- Prevent sleep during prune, then run the script -->
+        <!-- Prevent sleep during check, then run the script -->
         <string>/usr/bin/caffeinate</string>
         <string>-is</string>
         <string>{{SCRIPT_DIR}}/run_backup.sh</string>
-        <string>prune</string>
+        <string>check</string>
     </array>
 
-    <!-- Run nightly at 23:00 while loaded. -->
+    <!-- Run Sundays at 04:00 while loaded. -->
     <key>StartCalendarInterval</key>
     <dict>
+        <key>Weekday</key>
+        <integer>0</integer>
         <key>Hour</key>
-        <integer>23</integer>
+        <integer>4</integer>
         <key>Minute</key>
         <integer>0</integer>
     </dict>
 
     <!-- Where to log stdout/stderr from launchd runs -->
     <key>StandardOutPath</key>
-    <string>{{HOME}}/Library/Logs/restic-rest-client/daemon_prune.log</string>
+    <string>{{HOME}}/Library/Logs/restic-rest-client/daemon_check.log</string>
 
     <key>StandardErrorPath</key>
-    <string>{{HOME}}/Library/Logs/restic-rest-client/daemon_prune.log</string>
+    <string>{{HOME}}/Library/Logs/restic-rest-client/daemon_check.log</string>
 </dict>
 </plist>

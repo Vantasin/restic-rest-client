@@ -137,7 +137,7 @@ Pass `./configure_env.sh --repo-name NAME --host LABEL` if the client wants to
 override those defaults during setup.
 
 After `make configure`, review `restic.env` if you want to change optional
-settings such as prune mode, notifications, or power guards.
+settings such as prune mode, check behavior, notifications, or power guards.
 
 ## 5. Store the passwords
 

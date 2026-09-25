@@ -8,6 +8,7 @@ automation jobs.
 These plist templates define how the repo schedules and runs:
 
 - backups
+- weekly repository checks
 - prune jobs when enabled
 - log cleanup
 
@@ -19,6 +20,8 @@ be installed into `~/Library/LaunchAgents/`.
 
 - [`com.restic-rest-client.backup.plist.example`](./com.restic-rest-client.backup.plist.example):
   backup schedule and command
+- [`com.restic-rest-client.check.plist.example`](./com.restic-rest-client.check.plist.example):
+  weekly Sunday 04:00 check schedule and command
 - [`com.restic-rest-client.prune.plist.example`](./com.restic-rest-client.prune.plist.example):
   prune schedule and command
 - [`com.restic-rest-client.logcleanup.plist.example`](./com.restic-rest-client.logcleanup.plist.example):
@@ -33,10 +36,13 @@ be installed into `~/Library/LaunchAgents/`.
 
 - Changes here affect generated local plists, not installed launch agents,
   until you regenerate and reload them locally.
-- Backup and logcleanup are always installed. The prune plist is installed only
-  when `RESTIC_PRUNE_ENABLED=true`.
+- Backup, check, and logcleanup are always installed. The prune plist is
+  installed only when `RESTIC_PRUNE_ENABLED=true`.
 - The backup plist uses `RunAtLoad`, so a successful load of the installed
   backup agent starts one immediate backup run before the regular interval
   schedule takes over.
+- The check plist runs Sundays at 04:00 and relies on `run_backup.sh check`
+  auto mode to choose lite versus full verification.
+- The prune plist runs nightly at 23:00 while loaded.
 - Schedule changes are operationally significant and should be reflected in the
   human docs.

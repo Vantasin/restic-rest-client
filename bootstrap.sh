@@ -6,9 +6,11 @@ HOME_DIR="$HOME"
 USER_NAME="${USER:-$(id -un)}"
 HOST_NAME="${HOSTNAME:-}"
 BACKUP_LABEL="com.restic-rest-client.backup"
+CHECK_LABEL="com.restic-rest-client.check"
 PRUNE_LABEL="com.restic-rest-client.prune"
 LOGCLEANUP_LABEL="com.restic-rest-client.logcleanup"
 BACKUP_PLIST_NAME="${BACKUP_LABEL}.plist"
+CHECK_PLIST_NAME="${CHECK_LABEL}.plist"
 PRUNE_PLIST_NAME="${PRUNE_LABEL}.plist"
 LOGCLEANUP_PLIST_NAME="${LOGCLEANUP_LABEL}.plist"
 NEWSYSLOG_TEMPLATE_NAME="com.restic-rest-client.conf.example"
@@ -267,8 +269,9 @@ rollback_install_state() {
   local agents_dir="$2"
   local dst_conf="$3"
   local backup_was_loaded="$4"
-  local prune_was_loaded="$5"
-  local logcleanup_was_loaded="$6"
+  local check_was_loaded="$5"
+  local prune_was_loaded="$6"
+  local logcleanup_was_loaded="$7"
   local rollback_status=0
 
   echo "ROLLBACK: restoring launchd/newsyslog install state..."
@@ -276,10 +279,12 @@ rollback_install_state() {
   set +e
 
   launchctl bootout "gui/$UID/$BACKUP_LABEL" >/dev/null 2>&1 || true
+  launchctl bootout "gui/$UID/$CHECK_LABEL" >/dev/null 2>&1 || true
   launchctl bootout "gui/$UID/$PRUNE_LABEL" >/dev/null 2>&1 || true
   launchctl bootout "gui/$UID/$LOGCLEANUP_LABEL" >/dev/null 2>&1 || true
 
   restore_user_install_file "$state_dir" "$BACKUP_PLIST_NAME" "$agents_dir/$BACKUP_PLIST_NAME" || rollback_status=1
+  restore_user_install_file "$state_dir" "$CHECK_PLIST_NAME" "$agents_dir/$CHECK_PLIST_NAME" || rollback_status=1
   restore_user_install_file "$state_dir" "$PRUNE_PLIST_NAME" "$agents_dir/$PRUNE_PLIST_NAME" || rollback_status=1
   restore_user_install_file "$state_dir" "$LOGCLEANUP_PLIST_NAME" "$agents_dir/$LOGCLEANUP_PLIST_NAME" || rollback_status=1
   restore_sudo_install_file "$state_dir" "newsyslog.conf" "$dst_conf" || rollback_status=1
@@ -289,6 +294,9 @@ rollback_install_state() {
   fi
   if [[ "$prune_was_loaded" == "true" && -f "$agents_dir/$PRUNE_PLIST_NAME" ]]; then
     launchctl load "$agents_dir/$PRUNE_PLIST_NAME" >/dev/null 2>&1 || rollback_status=1
+  fi
+  if [[ "$check_was_loaded" == "true" && -f "$agents_dir/$CHECK_PLIST_NAME" ]]; then
+    launchctl load "$agents_dir/$CHECK_PLIST_NAME" >/dev/null 2>&1 || rollback_status=1
   fi
   if [[ "$backup_was_loaded" == "true" && -f "$agents_dir/$BACKUP_PLIST_NAME" ]]; then
     launchctl load "$agents_dir/$BACKUP_PLIST_NAME" >/dev/null 2>&1 || rollback_status=1
@@ -336,6 +344,7 @@ run_install_transaction() {
   local prune_enabled
   local agents_dir local_conf tmp_conf dst_conf state_dir
   local backup_was_loaded=false
+  local check_was_loaded=false
   local prune_was_loaded=false
   local logcleanup_was_loaded=false
   local install_newsyslog=false
@@ -366,6 +375,7 @@ run_install_transaction() {
   mkdir -p "$agents_dir"
 
   [[ -f "$SCRIPT_DIR/launchd/$BACKUP_PLIST_NAME" ]] || { echo "ERROR: missing $SCRIPT_DIR/launchd/$BACKUP_PLIST_NAME"; return 1; }
+  [[ -f "$SCRIPT_DIR/launchd/$CHECK_PLIST_NAME" ]] || { echo "ERROR: missing $SCRIPT_DIR/launchd/$CHECK_PLIST_NAME"; return 1; }
   [[ -f "$SCRIPT_DIR/launchd/$LOGCLEANUP_PLIST_NAME" ]] || { echo "ERROR: missing $SCRIPT_DIR/launchd/$LOGCLEANUP_PLIST_NAME"; return 1; }
   if is_true "$prune_enabled"; then
     [[ -f "$SCRIPT_DIR/launchd/$PRUNE_PLIST_NAME" ]] || { echo "ERROR: missing $SCRIPT_DIR/launchd/$PRUNE_PLIST_NAME"; return 1; }
@@ -406,6 +416,9 @@ run_install_transaction() {
   if launchd_label_is_loaded "$BACKUP_LABEL"; then
     backup_was_loaded=true
   fi
+  if launchd_label_is_loaded "$CHECK_LABEL"; then
+    check_was_loaded=true
+  fi
   if launchd_label_is_loaded "$PRUNE_LABEL"; then
     prune_was_loaded=true
   fi
@@ -419,6 +432,7 @@ run_install_transaction() {
     return 1
   fi
   backup_existing_install_file "$agents_dir/$BACKUP_PLIST_NAME" "$state_dir" "$BACKUP_PLIST_NAME" || { rm -f "$tmp_conf"; rm -rf "$state_dir"; return 1; }
+  backup_existing_install_file "$agents_dir/$CHECK_PLIST_NAME" "$state_dir" "$CHECK_PLIST_NAME" || { rm -f "$tmp_conf"; rm -rf "$state_dir"; return 1; }
   backup_existing_install_file "$agents_dir/$PRUNE_PLIST_NAME" "$state_dir" "$PRUNE_PLIST_NAME" || { rm -f "$tmp_conf"; rm -rf "$state_dir"; return 1; }
   backup_existing_install_file "$agents_dir/$LOGCLEANUP_PLIST_NAME" "$state_dir" "$LOGCLEANUP_PLIST_NAME" || { rm -f "$tmp_conf"; rm -rf "$state_dir"; return 1; }
   backup_existing_install_file "$dst_conf" "$state_dir" "newsyslog.conf" "true" || { rm -f "$tmp_conf"; rm -rf "$state_dir"; return 1; }
@@ -435,21 +449,28 @@ run_install_transaction() {
 
   if ! sudo test -f "$dst_conf"; then
     echo "ERROR: $dst_conf not found after install."
-    rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
+    rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$check_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
     rm -f "$tmp_conf"
     rm -rf "$state_dir"
     return 1
   fi
 
   if ! copy_launchd_agent "$BACKUP_PLIST_NAME" "$agents_dir"; then
-    rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
+    rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$check_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
+    rm -f "$tmp_conf"
+    rm -rf "$state_dir"
+    return 1
+  fi
+
+  if ! copy_launchd_agent "$CHECK_PLIST_NAME" "$agents_dir"; then
+    rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$check_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
     rm -f "$tmp_conf"
     rm -rf "$state_dir"
     return 1
   fi
 
   if ! copy_launchd_agent "$LOGCLEANUP_PLIST_NAME" "$agents_dir"; then
-    rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
+    rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$check_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
     rm -f "$tmp_conf"
     rm -rf "$state_dir"
     return 1
@@ -457,7 +478,7 @@ run_install_transaction() {
 
   if is_true "$prune_enabled"; then
     if ! copy_launchd_agent "$PRUNE_PLIST_NAME" "$agents_dir"; then
-      rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
+      rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$check_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
       rm -f "$tmp_conf"
       rm -rf "$state_dir"
       return 1
@@ -465,11 +486,19 @@ run_install_transaction() {
   fi
 
   launchctl bootout "gui/$UID/$BACKUP_LABEL" >/dev/null 2>&1 || true
+  launchctl bootout "gui/$UID/$CHECK_LABEL" >/dev/null 2>&1 || true
   launchctl bootout "gui/$UID/$PRUNE_LABEL" >/dev/null 2>&1 || true
   launchctl bootout "gui/$UID/$LOGCLEANUP_LABEL" >/dev/null 2>&1 || true
 
   if ! launchctl load "$agents_dir/$LOGCLEANUP_PLIST_NAME"; then
-    rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
+    rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$check_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
+    rm -f "$tmp_conf"
+    rm -rf "$state_dir"
+    return 1
+  fi
+
+  if ! launchctl load "$agents_dir/$CHECK_PLIST_NAME"; then
+    rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$check_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
     rm -f "$tmp_conf"
     rm -rf "$state_dir"
     return 1
@@ -477,7 +506,7 @@ run_install_transaction() {
 
   if is_true "$prune_enabled"; then
     if ! launchctl load "$agents_dir/$PRUNE_PLIST_NAME"; then
-      rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
+      rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$check_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
       rm -f "$tmp_conf"
       rm -rf "$state_dir"
       return 1
@@ -487,7 +516,7 @@ run_install_transaction() {
       rm -f "$agents_dir/$PRUNE_PLIST_NAME"
       if [[ -e "$agents_dir/$PRUNE_PLIST_NAME" ]]; then
         echo "ERROR: failed to remove $agents_dir/$PRUNE_PLIST_NAME"
-        rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
+        rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$check_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
         rm -f "$tmp_conf"
         rm -rf "$state_dir"
         return 1
@@ -499,14 +528,21 @@ run_install_transaction() {
   fi
 
   if ! launchctl load "$agents_dir/$BACKUP_PLIST_NAME"; then
-    rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
+    rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$check_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
     rm -f "$tmp_conf"
     rm -rf "$state_dir"
     return 1
   fi
 
   if ! verify_launchd_loaded "$LOGCLEANUP_LABEL"; then
-    rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
+    rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$check_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
+    rm -f "$tmp_conf"
+    rm -rf "$state_dir"
+    return 1
+  fi
+
+  if ! verify_launchd_loaded "$CHECK_LABEL"; then
+    rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$check_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
     rm -f "$tmp_conf"
     rm -rf "$state_dir"
     return 1
@@ -514,14 +550,14 @@ run_install_transaction() {
 
   if is_true "$prune_enabled"; then
     if ! verify_launchd_loaded "$PRUNE_LABEL"; then
-      rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
+      rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$check_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
       rm -f "$tmp_conf"
       rm -rf "$state_dir"
       return 1
     fi
   else
     if ! verify_launchd_unloaded "$PRUNE_LABEL"; then
-      rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
+      rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$check_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
       rm -f "$tmp_conf"
       rm -rf "$state_dir"
       return 1
@@ -530,7 +566,7 @@ run_install_transaction() {
   fi
 
   if ! verify_launchd_loaded "$BACKUP_LABEL"; then
-    rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
+    rollback_install_state "$state_dir" "$agents_dir" "$dst_conf" "$backup_was_loaded" "$check_was_loaded" "$prune_was_loaded" "$logcleanup_was_loaded" || true
     rm -f "$tmp_conf"
     rm -rf "$state_dir"
     return 1
@@ -549,6 +585,7 @@ if [[ "$do_generate" == "true" || "$do_install" == "true" ]]; then
   write_from_template "$SCRIPT_DIR/restic-exclude-macos.txt.example" "$SCRIPT_DIR/restic-exclude-macos.txt"
 
   write_from_template "$SCRIPT_DIR/launchd/$BACKUP_PLIST_NAME.example" "$SCRIPT_DIR/launchd/$BACKUP_PLIST_NAME"
+  write_from_template "$SCRIPT_DIR/launchd/$CHECK_PLIST_NAME.example" "$SCRIPT_DIR/launchd/$CHECK_PLIST_NAME"
   write_from_template "$SCRIPT_DIR/launchd/$PRUNE_PLIST_NAME.example" "$SCRIPT_DIR/launchd/$PRUNE_PLIST_NAME"
   write_from_template "$SCRIPT_DIR/launchd/$LOGCLEANUP_PLIST_NAME.example" "$SCRIPT_DIR/launchd/$LOGCLEANUP_PLIST_NAME"
 fi
@@ -571,14 +608,17 @@ if [[ "$do_uninstall" == "true" ]]; then
 
   agents_dir="$HOME_DIR/Library/LaunchAgents"
   launchctl bootout "gui/$UID/$BACKUP_LABEL" >/dev/null 2>&1 || true
+  launchctl bootout "gui/$UID/$CHECK_LABEL" >/dev/null 2>&1 || true
   launchctl bootout "gui/$UID/$PRUNE_LABEL" >/dev/null 2>&1 || true
   launchctl bootout "gui/$UID/$LOGCLEANUP_LABEL" >/dev/null 2>&1 || true
 
   remove_file "$agents_dir/$BACKUP_PLIST_NAME"
+  remove_file "$agents_dir/$CHECK_PLIST_NAME"
   remove_file "$agents_dir/$PRUNE_PLIST_NAME"
   remove_file "$agents_dir/$LOGCLEANUP_PLIST_NAME"
 
   verify_launchd_unloaded "$BACKUP_LABEL"
+  verify_launchd_unloaded "$CHECK_LABEL"
   verify_launchd_unloaded "$PRUNE_LABEL"
   verify_launchd_unloaded "$LOGCLEANUP_LABEL"
 fi
@@ -611,6 +651,7 @@ if [[ "$do_uninstall" == "true" ]]; then
   remove_file "$SCRIPT_DIR/restic-include-macos.txt"
   remove_file "$SCRIPT_DIR/restic-exclude-macos.txt"
   remove_file "$SCRIPT_DIR/launchd/$BACKUP_PLIST_NAME"
+  remove_file "$SCRIPT_DIR/launchd/$CHECK_PLIST_NAME"
   remove_file "$SCRIPT_DIR/launchd/$PRUNE_PLIST_NAME"
   remove_file "$SCRIPT_DIR/launchd/$LOGCLEANUP_PLIST_NAME"
   echo "VERIFIED: local generated files removed"

@@ -42,8 +42,8 @@ make install
 Generate local config files and install launchd + `newsyslog`.
 This prompts for `sudo` to validate/install the `newsyslog` config before the
 managed launchd agents are reloaded.
-Backup and log cleanup are always installed. Prune is installed only when
-`RESTIC_PRUNE_ENABLED=true`. Rerun `make install` after changing
+Backup, check, and log cleanup are always installed. Prune is installed only
+when `RESTIC_PRUNE_ENABLED=true`. Rerun `make install` after changing
 `RESTIC_PRUNE_ENABLED` so the installed launchd assets match the new prune
 mode without overwriting local generated config. If install fails after it has
 started changing managed state, `bootstrap.sh` rolls the managed
@@ -102,6 +102,14 @@ make prune
 ```
 
 Run `forget --prune` when `RESTIC_PRUNE_ENABLED=true`.
+
+```bash
+make check
+```
+
+Run a repository integrity check immediately. `make check` uses the same auto
+selection as the weekly launchd job: lite on ordinary Sundays, full on the
+last Sunday of the month.
 
 ```bash
 make logcleanup

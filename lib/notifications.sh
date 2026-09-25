@@ -169,9 +169,14 @@ send_email_message() {
 
 build_lock_failure_note() {
   local task_label="$1"
+  local retry_lock_value="${RESTIC_RETRY_LOCK}"
+
+  if [[ "$task_label" == "check" && -n "${RESTIC_CHECK_RETRY_LOCK:-}" ]]; then
+    retry_lock_value="${RESTIC_CHECK_RETRY_LOCK}"
+  fi
 
   cat <<EOF
-Restic ${task_label} could not acquire the repository lock after waiting ${RESTIC_RETRY_LOCK}.
+Restic ${task_label} could not acquire the repository lock after waiting ${retry_lock_value}.
 Only run stale lock cleanup when no restic process is active.
 
 From the repo root:
@@ -212,6 +217,42 @@ log_has_lock_failure() {
   grep -Eiq 'repo already locked|repository is already locked|unable to create lock in backend|failed to lock repository|remove stale locks' "$LOGFILE"
 }
 
+resolve_notification_toggle() {
+  local task_label="$1"
+  local outcome="$2"
+  local global_var default_value per_task_var
+
+  case "$outcome" in
+    failure)
+      global_var="RESTIC_NOTIFY_ON_FAILURE"
+      default_value="true"
+      ;;
+    success)
+      global_var="RESTIC_NOTIFY_ON_SUCCESS"
+      default_value="false"
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+
+  case "$task_label" in
+    backup|prune|check)
+      per_task_var="RESTIC_${task_label:u}_NOTIFY_ON_${outcome:u}"
+      if (( ${+parameters[$per_task_var]} )); then
+        printf '%s' "${(P)per_task_var}"
+        return 0
+      fi
+      ;;
+  esac
+
+  if (( ${+parameters[$global_var]} )); then
+    printf '%s' "${(P)global_var}"
+  else
+    printf '%s' "$default_value"
+  fi
+}
+
 notify_failure() {
   local exit_code="$1"
   local task_label="${2:-$TASK}"
@@ -224,12 +265,14 @@ notify_failure() {
   local heading_text
   local subject body
   local html_body extra_rows repo_value attachment_name
+  local notify_on_failure
 
   if [[ -z "${RESTIC_NOTIFY_EMAIL:-}" ]]; then
     return 0
   fi
 
-  if ! is_true "$force_send" && ! is_true "${RESTIC_NOTIFY_ON_FAILURE:-true}"; then
+  notify_on_failure="$(resolve_notification_toggle "$task_label" "failure")" || notify_on_failure="true"
+  if ! is_true "$force_send" && ! is_true "$notify_on_failure"; then
     return 0
   fi
 
@@ -243,10 +286,10 @@ notify_failure() {
     subject_summary="completed with warnings"
     body_summary="completed with warnings"
     note_text=$(merge_note_text "$note_text" "Backup completed with unreadable source files; the snapshot may be incomplete.")
-  elif [[ ( "$task_label" == "backup" || "$task_label" == "prune" ) ]] && \
+  elif [[ ( "$task_label" == "backup" || "$task_label" == "prune" || "$task_label" == "check" ) ]] && \
        { [[ "$exit_code" -eq 11 ]] || log_has_lock_failure; }; then
     note_text=$(merge_note_text "$note_text" "$(build_lock_failure_note "$task_label")")
-  elif [[ "$exit_code" -eq 1 && ( "$task_label" == "backup" || "$task_label" == "prune" ) ]]; then
+  elif [[ "$exit_code" -eq 1 && ( "$task_label" == "backup" || "$task_label" == "prune" || "$task_label" == "check" ) ]]; then
     note_text=$(merge_note_text "$note_text" "$(build_generic_restic_failure_note "$task_label")")
   fi
 
@@ -293,12 +336,14 @@ notify_success() {
   local subject_suffix="${5:-}"
   local subject body
   local html_body attachment_name extra_rows
+  local notify_on_success
 
   if [[ -z "${RESTIC_NOTIFY_EMAIL:-}" ]]; then
     return 0
   fi
 
-  if ! is_true "$force_send" && ! is_true "${RESTIC_NOTIFY_ON_SUCCESS:-false}"; then
+  notify_on_success="$(resolve_notification_toggle "$task_label" "success")" || notify_on_success="false"
+  if ! is_true "$force_send" && ! is_true "$notify_on_success"; then
     return 0
   fi
 
