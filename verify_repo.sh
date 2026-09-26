@@ -45,6 +45,8 @@ check_shell() {
     "lib/platform.sh"
     "lib/notifications.sh"
     "lib/tasks.sh"
+    "lib/install.sh"
+    "tests/install.sh"
     "bootstrap.sh"
     "setup_password.sh"
     "verify_repo.sh"

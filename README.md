@@ -80,8 +80,9 @@ make install
 ```
 
 That reloads the installed launchd agents and adds or removes the prune launch
-agent to match `RESTIC_PRUNE_ENABLED` without overwriting your local generated
-config. Use `make install-force` only when you intentionally want to
+agent to match `RESTIC_PRUNE_ENABLED`, preserving existing `restic.env` and
+include/exclude files. It updates unmodified managed assets and preserves
+customizations or reports conflicts; see [upgrade behavior](./Docs/BOOTSTRAP.md#upgrading-an-existing-installation). Use `make install-force` only when you intentionally want to
 regenerate local files from templates and overwrite the installed
 `newsyslog` config.
 

@@ -73,9 +73,11 @@ The script prints a short action log:
 
 - `WROTE:` for generated local files
 - `SKIP:` when a target already exists
-- `COPIED:` when launchd plists are copied to `~/Library/LaunchAgents`
+- `PRESERVED:` for retained customizations
+- `UPGRADED:` for recognized historical templates
+- `CONFLICT:` when manual resolution is required
 - `VERIFIED: <label> loaded` when a launchd agent is confirmed loaded
-- `INSTALLED:` when `/etc/newsyslog.d/com.restic-rest-client.conf` is written
+- `INSTALLED:` when launchd or `newsyslog` assets are written
 - `VERIFIED:` when launchd or `newsyslog` validation succeeds
 - `REMOVED:` when uninstall deletes a file
 
@@ -93,7 +95,8 @@ The prune launch agent is installed only when `RESTIC_PRUNE_ENABLED=true` in
 access model.
 
 The current prune template runs nightly at 23:00 when enabled and loaded.
-Existing generated plists retain their previous schedule until updated.
+Unmodified managed plists adopt template schedule changes on install; custom
+schedules are preserved or reported as conflicts.
 
 If prune is disabled, install removes any previously installed prune launch
 agent and verifies that it is not still loaded.
@@ -105,50 +108,62 @@ make install
 ```
 
 That reloads the installed launchd agents and adds or removes the prune launch
-agent to match the new setting without overwriting your local generated config.
+agent to match the new setting while preserving existing `restic.env` and
+include/exclude files. Managed plists and rotation rules are reconciled as
+described below.
 Use `make install-force` only when you intentionally want to regenerate local
 files from templates and overwrite the installed `newsyslog` config.
 
 ## Upgrading An Existing Installation
 
-Normal `make install` preserves existing generated files and the installed
-`newsyslog` configuration. To adopt the weekly check job and the new prune
-schedule without overwriting your credentials or custom exclusions:
+Run `make install` (or `make install-and-watch` to follow the immediate
+backup). Existing `restic.env` and include/exclude files are preserved. Missing
+personal config files are generated from templates.
 
-1. Run `make bootstrap` to generate missing files, including the check plist.
-   Existing `restic.env`, include/exclude files, and plists are preserved.
-2. Review `launchd/com.restic-rest-client.prune.plist`. To adopt the new
-   schedule, change `StartCalendarInterval` to hour `23`, minute `0`. Keep any
-   other local customizations. Validate it with
-   `plutil -lint launchd/com.restic-rest-client.prune.plist`.
-3. Back up the installed rotation config, then edit it:
+The installer renders current templates and reconciles both local and installed
+plists before changing managed assets:
 
-   ```bash
-   sudo cp -p /etc/newsyslog.d/com.restic-rest-client.conf \
-     "/etc/newsyslog.d/com.restic-rest-client.conf.backup-$(date +%Y%m%d%H%M%S)"
-   sudoedit /etc/newsyslog.d/com.restic-rest-client.conf
-   ```
+- Files matching the previous rendered default are updated automatically.
+- With no baseline, exact historical template matches are upgraded when Git
+  history is available; unknown legacy customizations are preserved.
+- Custom plists are preserved when the template has not changed. Changes to
+  both a custom plist and its template produce a conflict. Different local
+  and installed overrides also produce a conflict.
+- Rotation rules matching their previous defaults are updated; custom or
+  unknown legacy rules and comments are retained. Missing managed log paths
+  (including `daemon_check.log`) are added once. Duplicate managed rules fail
+  preflight. Removed default rules are removed only if still unmodified.
 
-   Duplicate the existing `daemon_backup.log` rule, changing only its filename
-   to `daemon_check.log`. Keep the expanded home path, owner, and rotation
-   settings; do not paste unresolved template placeholders. If a check rule
-   already exists, retain just one. Validate before proceeding:
+Rendered defaults are saved in Git-ignored `.install-state/baselines/` after
+success. Keep this directory for future upgrades; it contains host-specific
+managed defaults, not passwords. Uninstall removes it.
 
-   ```bash
-   sudo newsyslog -n -f /etc/newsyslog.d/com.restic-rest-client.conf
-   ```
+Preflight validates all candidate plists and rotation rules. Conflicts or
+validation failures leave managed files and loaded agents unchanged. If applying
+an update fails, the installer attempts to restore local and installed assets,
+baselines, and the previous loaded-agent state. An incomplete rollback prints
+the retained recovery directory. Personal config generation happens before this
+transaction and is not rolled back.
 
-4. Review the optional check and per-task notification settings in
-   [RESTIC_ENV.md](./RESTIC_ENV.md#check-mode). Existing configs use the runtime
-   defaults unless you add overrides.
-5. Run `make install` to reload the managed agents. This starts an immediate
-   backup through `RunAtLoad`; the check job waits for its Sunday schedule.
-   Confirm it loaded with
-   `launchctl print "gui/$(id -u)/com.restic-rest-client.check"`.
+For a plist conflict, save copies of both `launchd/<name>.plist` and
+`~/Library/LaunchAgents/<name>.plist`, and review the printed diff. To adopt the
+new default for that plist, remove those two files and rerun `make install`.
+To retain a custom configuration across a template change, first adopt the
+new default this way, then reapply the reviewed edits to the local plist and
+rerun `make install`. Install reloads agents and may start a backup each time.
+Simply editing one copy may leave the other in conflict.
 
-Avoid `make install-force` for this migration: it also replaces `restic.env`
-and your local include/exclude lists. Local exclusions, such as intentionally
-omitted application profiles, are Git-ignored and are not preserved by a push.
+Review optional check and per-task notification settings in
+[RESTIC_ENV.md](./RESTIC_ENV.md#check-mode). Existing configs use runtime
+defaults unless you add overrides. Confirm the weekly check agent with:
+
+```bash
+launchctl print "gui/$(id -u)/com.restic-rest-client.check"
+```
+
+Avoid `make install-force` for routine upgrades: it replaces `restic.env`,
+include/exclude lists, managed plists, and rotation config with template values.
+Local exclusions are Git-ignored and are not preserved by a push.
 
 ## Recommended Order
 
@@ -176,7 +191,8 @@ matching Keychain entry already exists. Use
 
 - `restic.env` is created with placeholder REST settings and Keychain lookup
   commands, not live passwords
-- existing generated files are not overwritten unless you pass `--force`
+- `--generate` preserves existing files unless you pass `--force`
+- normal install preserves personal config and reconciles managed assets as above
 - uninstall removes the generated local files
 
 ## Usage

@@ -13,6 +13,8 @@ external REST-server backend.
   failure-classification helpers used by `run_backup.sh`
 - `lib/tasks.sh`: sourced backup, check, prune, and logcleanup task helpers
   used by `run_backup.sh`
+- `lib/install.sh`: managed-asset reconciliation and install transaction helpers
+- `tests/install.sh`: mocked installer regression suite
 - `bootstrap.sh`: generates local files from tracked templates and can install
   launchd/newsyslog assets
 - `setup.sh`: curl-friendly onboarding entry point that can install missing
@@ -45,6 +47,7 @@ external REST-server backend.
 These are expected local/generated files and should not be treated as the main
 committed source of truth unless the task explicitly targets installed state:
 
+- `.install-state/baselines/`
 - `restic.env`
 - `restic-include-macos.txt`
 - `restic-exclude-macos.txt`

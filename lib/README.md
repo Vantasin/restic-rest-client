@@ -10,3 +10,5 @@ Internal shell helper libraries used by the repo's top-level scripts.
   failure-classification helpers used by `run_backup.sh`
 - `tasks.sh`: sourced backup, check, prune, and logcleanup task bodies used by
   `run_backup.sh`
+- `install.sh`: managed plist and rotation reconciliation, preflight, and
+  rollback-safe installation used by `bootstrap.sh`

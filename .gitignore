@@ -21,3 +21,6 @@ launchd/*.plist
 *.swp
 *.tmp
 *.log
+
+# Installer baselines (rendered, host-specific managed assets)
+.install-state/

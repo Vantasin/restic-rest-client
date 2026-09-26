@@ -46,8 +46,12 @@ Canonical human docs:
   just docs.
 - `--install` should validate `newsyslog` before loading the managed launchd
   agents and should keep managed launchd/newsyslog changes rollback-safe.
-- `make install` should reconcile prune-agent state without overwriting local
-  generated config; `--force` is the template-overwrite path.
+- `lib/install.sh` reconciles managed assets against Git-ignored
+  `.install-state/baselines`; normal install preserves personal config, upgrades
+  unmodified managed defaults, and preserves or reports conflicting overrides.
+  See `Docs/BOOTSTRAP.md` for legacy migration and conflict recovery.
+- Run `zsh tests/install.sh` for installer regression coverage. `--force` also
+  regenerates personal config in the bootstrap dispatcher.
 - Password setup changes are security-sensitive; avoid exposing secrets in
   logs, docs, or examples.
 - Makefile shortcuts should stay aligned with the underlying scripts.
